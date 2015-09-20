@@ -8,7 +8,7 @@ import spray.routing.SimpleRoutingApp
 /**
  * Created by yardena on 9/20/15.
  */
-abstract class MainService(val name: String) extends SimpleRoutingApp with Configurable { self: App =>
+abstract class MainService(val name: String = "Spoilers") extends SimpleRoutingApp with Configurable { self: App =>
   implicit val system = ActorSystem(name)
   val log = Logging(system, getClass)
 
