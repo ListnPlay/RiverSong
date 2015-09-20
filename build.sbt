@@ -17,6 +17,8 @@ val akkaVersion   = "2.3.13"
 
 val json4sVersion = "3.2.11"
 
+val macWireVersion = "1.0.5"
+
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 libraryDependencies ++= Seq(
@@ -31,18 +33,15 @@ libraryDependencies ++= Seq(
   "org.json4s"               %% "json4s-jackson"    % json4sVersion,
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
 
-  "com.softwaremill.macwire" %% "macros"            % "1.0.5",
-  "com.softwaremill.macwire" %% "runtime"           % "1.0.5",
+  "com.softwaremill.macwire" %% "macros"            % macWireVersion,
+  "com.softwaremill.macwire" %% "runtime"           % macWireVersion,
 
   "io.dropwizard.metrics"    %  "metrics-core"      % "3.1.2",
   "io.dropwizard.metrics"    %  "metrics-jvm"       % "3.1.2",
   "nl.grons"                 %% "metrics-scala"     % "3.5.2" exclude("io.dropwizard.metrics", "metrics-core"),
   "com.github.jjagged"       %  "metrics-statsd"    % "1.0.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
   "com.novaquark"            %  "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
-  "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core"),
-
-  "org.scalatest"            %% "scalatest"         % "2.2.1"  % "test",
-  "io.spray"                 %% "spray-testkit"     % "1.3.1"  % "test"
+  "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core")
 )
 
 lazy val root = (project in file(".")).settings(
