@@ -4,12 +4,12 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.RouteResult.{Rejected, Complete}
-import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import com.featurefm.riversong.metrics.reporting.MetricsReportingManager
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.directives._
-import Directives._
+import akka.http.scaladsl.server.Directives._
 
 /**
  * Created by yardena on 9/20/15.

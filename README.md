@@ -7,14 +7,22 @@ Common base for microservices:
 
 ## How to use
 
-    class DummyServiceAssembly(implicit system: ActorSystem) extends ServiceAssembly {
-      //construct necessary objects
-      override def routes: Route = ??? //set your routes here
+    class MyServiceAssembly(implicit system: ActorSystem) extends ServiceAssembly {
+      //construct necessary objects, some of them will be implementations of BaseRouting
+      
+      lazy val serviceA = wire[MyService]
+      lazy val serviceB = wire[AnotherService]
+      lazy val serviceC = wire[YetAnotherService]
+      
+      override def routes: Route = buildRoutes(serviceA, serviceB, serviceC) //set your routes here
+    }
+and
+
+    object GeronimoService extends MainService("Geronimo") with App {
+      override def assembly: ServiceAssembly = new MyServiceAssembly
     }
 
-    object DummyManager extends MainService("Dummy") with App {
-      override def assembly: ServiceAssembly = new DummyServiceAssembly
-    }
+Run `GeronimoService`, by default it will start HTTP server on port 8080, but it can be controlled by configuration.
 
 ## What do you get out of the box
 
