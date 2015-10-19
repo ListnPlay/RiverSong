@@ -38,3 +38,8 @@ Requests are logged (unless you turn it off in configuration).
 
 ## WORK IN PROGRESS!
 ![Spoilers](http://cachebingo.titanbet.co.uk/sites/default/files/tumblr_static_tumblr_static_river_.jpg)
+
+## Credits:
+Heavily inspired by https://github.com/vonnagy/service-container
+
+
