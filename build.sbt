@@ -11,7 +11,7 @@ resolvers ++= Seq(
 
 val sprayVersion  = "1.3.3"
 
-val slf4jVersion  = "1.7.12"
+val log4jVersion  = "2.4.1"
 
 val akkaVersion   = "2.3.13"
 
@@ -22,9 +22,10 @@ val macWireVersion = "1.0.5"
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 libraryDependencies ++= Seq(
-  "org.slf4j"                %  "slf4j-api"         % slf4jVersion,
-  "org.slf4j"                %  "log4j-over-slf4j"  % slf4jVersion,
-  "ch.qos.logback"           %  "logback-classic"   % "1.1.3",
+  "org.apache.logging.log4j" %  "log4j-core"        % log4jVersion,
+  "org.apache.logging.log4j" %  "log4j-api"         % log4jVersion,
+  "org.apache.logging.log4j" %  "log4j-slf4j-impl"  % log4jVersion,
+  "org.slf4j"                %  "slf4j-api"         % "1.7.12",
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "io.spray"                 %% "spray-can"         % sprayVersion,
