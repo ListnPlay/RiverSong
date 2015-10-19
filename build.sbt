@@ -6,14 +6,15 @@ resolvers ++= Seq(
   "Sonatype snapshots"           at "https://oss.sonatype.org/content/repositories/snapshots",
   "Sonatype staging"             at "http://oss.sonatype.org/content/repositories/staging",
   "Java.net Maven2 Repository"   at "http://download.java.net/maven/2/",
+  "hseeberger at bintray"        at "http://dl.bintray.com/hseeberger/maven",
   "spray repo"                   at "http://repo.spray.io"
 )
 
-val sprayVersion  = "1.3.3"
-
 val log4jVersion  = "2.4.1"
 
-val akkaVersion   = "2.3.13"
+val akkaVersion   = "2.4.0"
+
+val streamsVersion = "1.0"
 
 val json4sVersion = "3.2.11"
 
@@ -28,11 +29,13 @@ libraryDependencies ++= Seq(
   "org.slf4j"                %  "slf4j-api"         % "1.7.12",
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
-  "io.spray"                 %% "spray-can"         % sprayVersion,
-  "io.spray"                 %% "spray-routing"     % sprayVersion,
-  "io.spray"                 %% "spray-json"        % "1.3.2",
+  "com.typesafe.akka"        %% "akka-stream-experimental"      % streamsVersion,
+  "com.typesafe.akka"        %% "akka-http-core-experimental"   % streamsVersion,
+  "com.typesafe.akka"        %% "akka-http-experimental"        % streamsVersion,
+  "com.typesafe.akka"        %% "akka-http-spray-json-experimental"          % streamsVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion,
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.1.0",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion,
   "com.softwaremill.macwire" %% "runtime"           % macWireVersion,

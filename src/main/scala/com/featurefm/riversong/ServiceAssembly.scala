@@ -2,7 +2,7 @@ package com.featurefm.riversong
 
 import akka.actor.ActorSystem
 import com.featurefm.riversong.routes.LifecycleRouting
-import spray.routing._
+import akka.http.scaladsl.server.Route
 
 /**
  * Created by yardena on 9/20/15.

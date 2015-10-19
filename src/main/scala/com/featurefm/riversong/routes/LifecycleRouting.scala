@@ -1,28 +1,40 @@
 package com.featurefm.riversong.routes
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.server.{Route, Directives}
 import com.featurefm.riversong.{Json4sProtocol, Message}
 import com.featurefm.riversong.metrics.{Metrics, MetricsWriter}
-import spray.routing.Directives
+import org.json4s.jackson.Serialization
 
 /**
  * Created by yardena on 8/12/15.
  */
 class LifecycleRouting(implicit val system: ActorSystem) extends Directives with BaseRouting {
 
-  import Json4sProtocol._
   lazy val writer = new MetricsWriter(Metrics(system).metricRegistry)
 
-  def routes: spray.routing.Route =
-    path("init") {
+  implicit val serialization = Serialization
+  import Json4sProtocol._
+
+  val statusChecks = metrics.meter("GET /status")
+
+  def routes: Route =
+    path("status") {
       get {
-        complete(Message("Server is up"))
+        complete {
+          statusChecks.mark()
+          Message("Server is up")
+        }
       }
     } ~
     path("metrics") {
       get {
         parameters('jvm ? "true", 'pattern.?) { (jvm, pattern) =>
-          complete(writer.getMetrics(jvm.toBoolean, pattern))
+          complete {
+            time("GET /metrics") {
+              writer.getMetrics(jvm.toBoolean, pattern)
+            }
+          }
         }
       }
     }
