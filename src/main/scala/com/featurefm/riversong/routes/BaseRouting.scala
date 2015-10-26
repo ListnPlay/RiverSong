@@ -9,9 +9,9 @@ import com.featurefm.riversong.metrics.Instrumented
  */
 trait BaseRouting extends Instrumented {
 
-  def status(e: Throwable, code: StatusCode) = if (e.isInstanceOf[IllegalArgumentException]) code else StatusCodes.InternalServerError
+  def status(e: Throwable, code: StatusCode): StatusCode = if (e.isInstanceOf[IllegalArgumentException]) code else StatusCodes.InternalServerError
 
-  def status(e: Throwable) = status(e, StatusCodes.BadRequest)
+  def status(e: Throwable): StatusCode = status(e, StatusCodes.BadRequest)
 
   def routes: Route
 
