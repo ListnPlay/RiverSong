@@ -13,7 +13,6 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives with
 
   lazy val writer = new MetricsWriter(Metrics(system).metricRegistry)
 
-  implicit val serialization = Serialization
   import Json4sProtocol._
 
   val statusChecks = metrics.meter("GET /status")
