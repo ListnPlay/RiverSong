@@ -7,9 +7,12 @@ Common base for microservices:
 
 ## How to use
 
-    class MyServiceAssembly(implicit system: ActorSystem) extends ServiceAssembly {
+    trait AllMyServices extends ServiceAssembly {
       //construct necessary objects, some of them will be implementations of BaseRouting
+      //routes should built from all routes provided by instances of BaseRouting that you want to expose
       
+      ...
+
       lazy val serviceA = wire[MyService]
       lazy val serviceB = wire[AnotherService]
       lazy val serviceC = wire[YetAnotherService]
@@ -19,10 +22,23 @@ Common base for microservices:
 and
 
     object GeronimoService extends MainService("Geronimo") with App {
-      override def assembly: ServiceAssembly = new MyServiceAssembly
+      override def assembly: ServiceAssembly = new ServiceAssembly with AllMyServices
     }
 
-Run `GeronimoService`, by default it will start HTTP server on port 8080, but it can be controlled by configuration.
+Run `GeronimoService`, by default it will start HTTP server on port 8080. 
+
+Host and port of the server are controlled by configuration:
+
+    akka {
+      ... 
+      
+      http.server {
+        listen_ip : "0.0.0.0"
+        listen_port: 8080
+      }
+      ...
+    }
+
 
 ## What do you get out of the box
 
