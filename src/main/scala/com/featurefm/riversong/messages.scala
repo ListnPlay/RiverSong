@@ -36,3 +36,5 @@ object FailedTo {
   def apply(op: Operation, subject: String, subjectId: String): Message =
     Message(s"Failed to $op $subject", operation = Some(op.toString), id = Some(subjectId))
 }
+
+//TODO move to "messages" package (or perhaps call it "bottle"?)
