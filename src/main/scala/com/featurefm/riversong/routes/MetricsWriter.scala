@@ -1,7 +1,6 @@
 package com.featurefm.riversong.routes
 
 import com.codahale.metrics._
-import org.json4s.JsonAST
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 

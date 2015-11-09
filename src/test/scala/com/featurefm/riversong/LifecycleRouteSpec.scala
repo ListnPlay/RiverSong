@@ -55,4 +55,10 @@ class LifecycleRouteSpec extends FlatSpec with Matchers with ScalatestRouteTest 
     }
   }
 
+  "GET /metrics" should "return success" in {
+    Get("/metrics") ~> routing.routes ~> check {
+      status shouldEqual StatusCodes.OK
+    }
+  }
+
 }

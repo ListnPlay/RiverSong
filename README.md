@@ -46,6 +46,8 @@ Host and port of the server are controlled by configuration:
 
 `GET /metrics?jvm={true|false}&pattern={metrics-key-regex}`
 
+`GET /config` and `GET /config/{path}`
+
 Periodic reporters for Slf4j, StatsD, InfluxDb and DataDog.
 
 Requests are logged (unless you turn it off in configuration).

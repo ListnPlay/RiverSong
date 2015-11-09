@@ -54,7 +54,7 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives with
           }
         }
       }
-    }
+    } ~
     path("metrics") {
       get {
         parameters('jvm ? "true", 'pattern.?) { (jvm, pattern) =>
