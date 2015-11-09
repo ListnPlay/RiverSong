@@ -49,11 +49,14 @@ libraryDependencies ++= Seq(
   "nl.grons"                 %% "metrics-scala"     % "3.5.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
   "com.github.jjagged"       %  "metrics-statsd"    % "1.0.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
   "com.novaquark"            %  "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
-  "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind")
+  "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind"),
+
+  "org.scalatest"            %% "scalatest"         % "2.2.5" % "test",
+  "com.typesafe.akka"        %% "akka-http-testkit-experimental" % "1.0" % "test"
 )
 
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.1.4",
+    version := "0.1.5",
     scalaVersion := "2.11.7")

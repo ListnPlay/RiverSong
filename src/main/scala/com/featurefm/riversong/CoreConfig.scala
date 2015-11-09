@@ -14,7 +14,7 @@ trait CoreConfig {
    * @param config
    * @return
    */
-  def getConfig(config: Option[Config]): Config = {
+  def getConfig(config: Option[Config] = None): Config = {
 
     val sysConfig = System.getProperty("config.file") match {
       // If we were not passed a Config then check to see if a config file
@@ -33,3 +33,5 @@ trait CoreConfig {
   }
 
 }
+
+object CoreConfig extends CoreConfig
