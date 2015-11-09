@@ -48,6 +48,8 @@ Host and port of the server are controlled by configuration:
 
 `GET /config` and `GET /config/{path}`
 
+`GET /health` which will become more meaningful if you register application sub-components 
+
 Periodic reporters for Slf4j, StatsD, InfluxDb and DataDog.
 
 Requests are logged (unless you turn it off in configuration).
