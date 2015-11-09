@@ -58,5 +58,5 @@ libraryDependencies ++= Seq(
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.1.5",
+    version := "0.1.6",
     scalaVersion := "2.11.7")

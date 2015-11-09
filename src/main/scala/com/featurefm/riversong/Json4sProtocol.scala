@@ -8,7 +8,7 @@ import org.json4s._
  */
 trait Json4sProtocol extends Json4sSupport {
   implicit val serialization = jackson.Serialization
-  implicit def json4sJacksonFormats: Formats = DefaultFormats ++ org.json4s.ext.JodaTimeSerializers.all
+  implicit val json4sJacksonFormats: Formats = DefaultFormats ++ org.json4s.ext.JodaTimeSerializers.all
 }
 
 object Json4sProtocol extends Json4sProtocol

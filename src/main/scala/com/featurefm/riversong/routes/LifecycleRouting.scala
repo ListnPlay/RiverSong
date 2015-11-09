@@ -4,22 +4,26 @@ import java.net.URLDecoder
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.StatusCodes.{InternalServerError, ServiceUnavailable}
 import akka.http.scaladsl.server.{Route, Directives}
 import com.featurefm.riversong.Configurable
+import com.featurefm.riversong.health.{ContainerHealth, HealthState}
 import com.featurefm.riversong.message.Message
 import com.featurefm.riversong.metrics.Metrics
 import com.typesafe.config.{ConfigObject, ConfigRenderOptions}
+import org.joda.time.DateTime
 import org.json4s.JsonAST.JValue
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.JsonDSL._
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
  * Created by yardena on 8/12/15.
  */
-class LifecycleRouting(implicit val system: ActorSystem) extends Directives with BaseRouting with Configurable {
+class LifecycleRouting(implicit val system: ActorSystem) extends Directives
+        with BaseRouting with Configurable with HealthProvider {
 
   lazy val writer = new MetricsWriter(Metrics(system).metricRegistry)
 
@@ -65,9 +69,26 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives with
           }
         }
       }
+    } ~
+    path("health") {
+      get {
+        onComplete(runChecks) {
+          case Success(check) =>
+            check.state match {
+              case HealthState.OK => complete(serialize(check))
+              case HealthState.DEGRADED => complete(serialize(check))
+              case HealthState.CRITICAL => complete(ServiceUnavailable, serialize(check))
+            }
+
+          case Failure(t) =>
+            log.error("An error occurred while fetching the system's health", t)
+            complete(InternalServerError, ContainerHealth(system.name, DateTime.now, HealthState.CRITICAL, t.getMessage, Nil))
+        }
+      }
     }
 
   private def write(conf: ConfigObject): JValue = parse(conf.render(ConfigRenderOptions.concise()))
+
   def getConfig(path: List[String]): Option[JValue] = {
     val key = path.map(URLDecoder.decode(_, "UTF-8")).mkString(".")
     if (config.hasPath(key))
