@@ -1,11 +1,16 @@
 package com.featurefm.riversong.routes
 
 import akka.event.Logging
-import akka.http.scaladsl.model.{StatusCode, StatusCodes}
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.{HttpRequest, StatusCode, StatusCodes}
+import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
+
+import akka.http.scaladsl.server.directives.BasicDirectives._
+
+import scala.concurrent.Future
+import scala.util.Try
 
 /**
  * Created by yardena on 8/6/15.
@@ -20,6 +25,36 @@ trait BaseRouting extends Json4sProtocol with Instrumented {
   def status(e: Throwable, code: StatusCode): StatusCode = if (e.isInstanceOf[IllegalArgumentException]) code else StatusCodes.InternalServerError
 
   def status(e: Throwable): StatusCode = status(e, StatusCodes.BadRequest)
+
+  def measured(name: String): Directive0 = measured(_ => name)
+
+  def measured(nameGenerator: HttpRequest => String = measurementNameDefault): Directive0 = {
+    extractRequestContext.flatMap { ctx =>
+      val t = timer(nameGenerator(ctx.request)).timerContext()
+      mapResponse { response =>
+        t.stop()
+        response
+      }
+    }
+  }
+  
+  def measurementNameDefault(req: HttpRequest) = s"${req.method.value} ${req.uri.path}"
+
+  def onCompleteMeasured[T](name: String)(future: => Future[T]): Directive1[Try[T]] = onCompleteMeasured(_ => name)(future)
+
+  def onCompleteMeasured[T](nameGenerator: HttpRequest => String = measurementNameDefault)(future: => Future[T]): Directive1[Try[T]] = {
+    import akka.http.scaladsl.util.FastFuture._
+
+    Directive { inner => ctx =>
+      import ctx.executionContext
+
+      val tc = timer(nameGenerator(ctx.request)).timerContext()
+      val f = future.fast.transformWith(t => inner(Tuple1(t))(ctx))
+      f.onComplete(_ => tc.stop())
+      f
+    }
+  }
+
 
   def routes: Route
 

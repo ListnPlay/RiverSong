@@ -7,9 +7,6 @@ import akka.util.Timeout
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-// This message is used to fetch the health
-case class GetHealth()
-
 trait HealthCheck {
 
   /**
@@ -39,6 +36,6 @@ trait RegisteredHealthCheckActor extends HealthCheck {
 
   override def getHealth: Future[HealthInfo] = {
     implicit val timeout = Timeout(5.seconds)
-    (self ? GetHealth).mapTo[HealthInfo]
+    (self ? CheckHealth).mapTo[HealthInfo]
   }
 }

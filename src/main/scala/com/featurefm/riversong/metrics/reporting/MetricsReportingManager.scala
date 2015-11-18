@@ -45,7 +45,7 @@ class MetricsReportingManager extends Actor with ActorLogging {
    */
   private[reporting] def startReporters(): Unit = {
     try {
-      val master = context.system.settings.config.getConfig("metrics.reporters");
+      val master = context.system.settings.config.getConfig("metrics.reporters")
 
       val definedReporters =
         for {
@@ -72,9 +72,9 @@ class MetricsReportingManager extends Actor with ActorLogging {
       reporters = definedReporters.toSeq
 
     } catch {
-      case e: Exception ⇒
-        System.err.println("Error while starting up metric reporters")
-        e.printStackTrace()
+      case e: Exception =>
+        log.error("Error while starting up metric reporters", e)
+//        e.printStackTrace()
         throw new ConfigurationException("Could not start reporters due to [" + e.toString + "]")
     }
   }

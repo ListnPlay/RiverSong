@@ -4,7 +4,7 @@ import akka.util.Timeout
 import com.featurefm.riversong.health._
 import com.featurefm.riversong.health.HealthState.HealthState
 import org.joda.time.DateTime
-import org.json4s.Extraction
+import org.json4s.{JValue, Extraction}
 import org.json4s.ext.EnumNameSerializer
 
 import scala.collection.mutable
@@ -107,7 +107,7 @@ trait HealthProvider extends BaseRouting {
     p.future
   }
 
-  def serialize(health: ContainerHealth): AnyRef = {
+  def serialize(health: ContainerHealth): JValue = {
     Extraction.decompose(health)(myFormats)
   }
 

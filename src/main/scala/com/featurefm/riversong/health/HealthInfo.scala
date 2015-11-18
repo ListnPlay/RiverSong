@@ -10,7 +10,7 @@ import com.featurefm.riversong.health.HealthState.HealthState
 /**
  * This message is used to ask for health information
  */
-case class CheckHealth()
+case object CheckHealth
 
 /**
  * The health check is used to define a subset of functionality that

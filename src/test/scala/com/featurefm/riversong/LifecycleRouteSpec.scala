@@ -21,7 +21,7 @@ class LifecycleRouteSpec extends FlatSpec with Matchers with ScalatestRouteTest 
   "GET /status" should "return success" in {
     Get("/status") ~> routing.routes ~> check {
       status shouldEqual StatusCodes.OK
-      responseAs[Message] === Message("Server is up")
+      responseAs[Message].message should startWith ("Server is up")
     }
   }
 
