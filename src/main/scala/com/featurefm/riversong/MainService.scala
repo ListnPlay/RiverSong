@@ -59,7 +59,7 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
     case bind: Http.ServerBinding =>
       log.info(s"Server ${bind.localAddress} started")
       val startTime = Platform.currentTime
-      val formatter = new PeriodFormatterBuilder().appendDays().appendSuffix("d").appendHours().appendSuffix("h").appendMinutes().appendSuffix("m").appendSeconds().appendSuffix("s").toFormatter
+      val formatter = new PeriodFormatterBuilder().appendDays().appendSuffix("d").appendHours().appendSuffix("h").appendMinutes().appendSuffix("m").printZeroAlways().appendSeconds().appendSuffix("s").toFormatter
       assembly.metrics.gauge("uptime"){ new Period(Platform.currentTime - startTime).toString(formatter) }
   }
 

@@ -1,5 +1,7 @@
 package com.featurefm.riversong
 
+import javax.management.relation.Relation
+
 /**
  * Created by yardena on 11/8/15.
  */
@@ -10,7 +12,13 @@ package object message {
   case class Message(message: String,
                      cause: Option[String] = None,
                      operation: Option[String] = None,
-                     id: Option[String] = None ) extends GenericMessage
+                     id: Option[String] = None,
+                     links: Option[Seq[(String, Relation)]] = None) extends GenericMessage {
+
+    def withLinks(links: (String, Relation)*): Message = copy(links = Some(links.toSeq))
+  }
+
+  case class Relation(href: String = "/")
 
   sealed trait Operation
   case object Add extends Operation { override def toString = "add"}

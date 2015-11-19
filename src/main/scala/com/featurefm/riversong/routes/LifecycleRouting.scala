@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.{Route, Directives}
 import com.codahale.metrics.Metric
 import com.featurefm.riversong.{ServiceAssembly, Configurable}
 import com.featurefm.riversong.health.{ContainerHealth, HealthState}
-import com.featurefm.riversong.message.Message
+import com.featurefm.riversong.message.{Relation, Message}
 import com.featurefm.riversong.metrics.Metrics
 import com.typesafe.config.{ConfigObject, ConfigRenderOptions}
 import org.joda.time.DateTime
@@ -30,13 +30,12 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives
 
   import nl.grons.metrics.scala.Implicits._
 
-  private[this] val uptimeMetrics = (name: String, m: Metric) => name.endsWith(".uptime")
-  private[this] val requestsMetrics = (name: String, m: Metric) => name.endsWith(".requests")
-
   def uptime: String = {
+    val uptimeMetrics = (name: String, m: Metric) => name.endsWith(".uptime")
     metrics.registry.getGauges(uptimeMetrics).values().iterator().next().getValue.toString
   }
   def count: Long = {
+    val requestsMetrics = (name: String, m: Metric) => name.endsWith(".requests")
     metrics.registry.getCounters(requestsMetrics).values().iterator().next().getCount
   }
 
@@ -44,12 +43,27 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives
     Message(s"Server is up for $uptime and has served $count requests")
   } getOrElse Message("Server is up just now, thanks for checking in")
 
+  def links = Seq(
+    "home"    -> Relation("/"),
+    "status"  -> Relation("/status"),
+    "health"  -> Relation("/health"),
+    "config"  -> Relation("/config"),
+    "metrics" -> Relation("/metrics")
+    )
+
   def routes: Route =
+    pathEndOrSingleSlash {
+      get {
+        complete {
+          okMessage withLinks (links:_*)
+        }
+      }
+    } ~
     path("status") {
       get {
         measured() {
           complete {
-            okMessage
+            Message("Server is up")
           }
         }
       }
@@ -57,48 +71,40 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives
     pathPrefix("config") {
       pathEndOrSingleSlash {
         get {
-          measured() {
-            complete {
-              write(config.root())
-            }
+          complete {
+            write(config.root())
           }
         }
       } ~
       path(Segment) { p =>
         get {
-          measured ("GET /config") {
-            getConfig(p) match {
-              case Some(res) => complete(res)
-              case None => complete(StatusCodes.NotFound, None)
-            }
+          getConfig(p) match {
+            case Some(res) => complete(res)
+            case None => complete(StatusCodes.NotFound, None)
           }
         }
       } ~
       path(Segments(2, 128)) { p =>
         get {
-          measured ("GET /config") {
-            getConfig(p) match {
-              case Some(res) => complete(res)
-              case None => complete(StatusCodes.NotFound, None)
-            }
+          getConfig(p) match {
+            case Some(res) => complete(res)
+            case None => complete(StatusCodes.NotFound, None)
           }
         }
       }
     } ~
     path("metrics") {
       get {
-        parameters('jvm ? "true", 'pattern.?) { (jvm, pattern) =>
-          measured () {
-            complete {
-              writer.getMetrics(jvm.toBoolean, pattern)
-            }
+        parameters('jvm ? "false", 'pattern.?) { (jvm, pattern) =>
+          complete {
+            writer.getMetrics(jvm.toBoolean, pattern)
           }
         }
       }
     } ~
     path("health") {
       get {
-        onCompleteMeasured () (runChecks) {
+        onComplete(runChecks) {
           case Success(check) =>
             check.state match {
               case HealthState.OK => complete(serialize(check))
