@@ -49,7 +49,7 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
     else
       measuredRoutes//rawRoutes
 
-  private[this] def measuredRoutes: Route = {
+  private[this] lazy val measuredRoutes: Route = {
     val rawRoutes: Route = assembly.routes ~ assembly.lifecycle.routes
 
     { ctx: RequestContext => requestCounter.inc(); ctx } andThen rawRoutes

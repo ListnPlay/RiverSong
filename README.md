@@ -7,6 +7,11 @@ Common base for microservices:
 
 ## How to use
 
+### sbt
+To include it in your project add `"com.featurefm" %% "river-song" % "0.1.9"`
+Only Scala 2.11 is currently supported.
+
+### code
     trait AllMyServices extends ServiceAssembly {
       //construct necessary objects, some of them will be implementations of BaseRouting
       //routes should built from all routes provided by instances of BaseRouting that you want to expose
@@ -42,7 +47,9 @@ Host and port of the server are controlled by configuration:
 
 ## What do you get out of the box
 
-`GET /status`
+`GET /` returns uptime and number of requests
+
+`GET /status` returns 200 if server is up
 
 `GET /metrics?jvm={true|false}&pattern={metrics-key-regex}`
 
