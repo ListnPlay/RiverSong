@@ -128,7 +128,6 @@ class MetricsWriter(registry: MetricRegistry) {
   }
 
   private def processMeter(metric: com.codahale.metrics.Meter): JObject = {
-    ("event_type" -> metric.getCount) ~
       writeMeteredFields(metric)
   }
 
