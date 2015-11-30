@@ -68,7 +68,7 @@ lazy val root = (project in file(".")).settings(
     pomAllRepositories := true,
     pomExtra := <scm>
                   <url>https://github.com/ListnPlay/RiverSong</url>
-                  <connection>https://github.com/ListnPlay/RiverSong</connection>
+                  <connection>git@github.com:ListnPlay/RiverSong.git</connection>
                 </scm>
                 <developers>
                   <developer>
