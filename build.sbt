@@ -16,7 +16,7 @@ val log4jVersion  = "2.4.1"
 
 val akkaVersion   = "2.4.0"
 
-val streamsVersion = "1.0"
+val streamsVersion = "2.0-M1"
 
 val json4sVersion = "3.3.0"
 
@@ -41,7 +41,7 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.1.0" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11"),
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.2.1" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11"),
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion,
   "com.softwaremill.macwire" %% "runtime"           % macWireVersion,
@@ -54,13 +54,13 @@ libraryDependencies ++= Seq(
   "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind"),
 
   "org.scalatest"            %% "scalatest"         % "2.2.5" % "test",
-  "com.typesafe.akka"        %% "akka-http-testkit-experimental" % "1.0" % "test"
+  "com.typesafe.akka"        %% "akka-http-testkit-experimental" % streamsVersion % "test"
 )
 
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.2",
+    version := "0.2.1",
     scalaVersion := "2.11.7",
     publishMavenStyle := false,
     bintrayOrganization := Some("listnplay"),
