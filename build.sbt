@@ -62,7 +62,6 @@ lazy val root = (project in file(".")).settings(
     organization := "com.featurefm",
     version := "0.2.1",
     scalaVersion := "2.11.7",
-    publishMavenStyle := false,
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
     publishMavenStyle := true,
