@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.StatusCodes.{InternalServerError, ServiceUnavailable}
 import akka.http.scaladsl.server.{Route, Directives}
 import com.codahale.metrics.Metric
-import com.featurefm.riversong.{ServiceAssembly, Configurable}
+import com.featurefm.riversong.Configurable
 import com.featurefm.riversong.health.{ContainerHealth, HealthState}
 import com.featurefm.riversong.message.{Relation, Message}
 import com.featurefm.riversong.metrics.Metrics

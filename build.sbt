@@ -1,3 +1,5 @@
+import sbt.Keys._
+
 resolvers ++= Seq(
   "Typesafe repository snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
   "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/",
@@ -58,5 +60,22 @@ libraryDependencies ++= Seq(
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.1.9",
-    scalaVersion := "2.11.7")
+    version := "0.2",
+    scalaVersion := "2.11.7",
+    publishMavenStyle := false,
+    bintrayOrganization := Some("listnplay"),
+    licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+    publishMavenStyle := true,
+    pomAllRepositories := true,
+    pomExtra := <scm>
+                  <url>https://github.com/ListnPlay/RiverSong</url>
+                  <connection>https://github.com/ListnPlay/RiverSong</connection>
+                </scm>
+                <developers>
+                  <developer>
+                    <id>ymeymann</id>
+                    <name>Yardena Meymann</name>
+                    <url>https://github.com/ymeymann</url>
+                  </developer>
+                </developers>
+    )

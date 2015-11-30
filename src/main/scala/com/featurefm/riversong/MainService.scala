@@ -10,12 +10,10 @@ import com.featurefm.riversong.metrics.reporting.MetricsReportingManager
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.directives._
 import akka.http.scaladsl.server.Directives._
-import nl.grons.metrics.scala._
 import org.joda.time.format.PeriodFormatterBuilder
 import org.joda.time.Period
 
 import scala.compat.Platform
-import scala.concurrent.Promise
 
 /**
  * Created by yardena on 9/20/15.
@@ -34,13 +32,20 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
 
   def assembly:ServiceAssembly
 
+  private[this] val F = new PeriodFormatterBuilder().appendMinutes().appendSuffix("m").appendSeconds().appendSuffix("s").printZeroAlways().appendMillis().appendSuffix("ms").toFormatter
+
   private def wrapper(req: HttpRequest): Any => Option[LogEntry] = {
-    case Complete(res) =>
-      Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${res.status}", Logging.InfoLevel))
-    case Rejected(seq) if seq.isEmpty =>
-      Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${StatusCodes.NotFound}", Logging.InfoLevel))
-    case Rejected(_) =>
-      Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> Rejected", Logging.InfoLevel))
+    val beginning = Platform.currentTime
+
+    {
+      case Complete(res) =>
+        val duration = new Period(Platform.currentTime - beginning)
+        Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${res.status} [${duration.toString(F)}]", Logging.InfoLevel))
+      case Rejected(seq) if seq.isEmpty =>
+        Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${StatusCodes.NotFound}", Logging.InfoLevel))
+      case Rejected(_) =>
+        Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> Rejected", Logging.InfoLevel))
+    }
   }
 
   private lazy val routes: Route =
