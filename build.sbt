@@ -41,7 +41,7 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.2.1" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11"),
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.3.0" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11"),
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion,
   "com.softwaremill.macwire" %% "runtime"           % macWireVersion,
