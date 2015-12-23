@@ -7,15 +7,13 @@ import akka.stream.ActorMaterializer
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
 
-import akka.http.scaladsl.server.directives.BasicDirectives._
-
 import scala.concurrent.Future
 import scala.util.Try
 
 /**
  * Created by yardena on 8/6/15.
  */
-trait BaseRouting extends Json4sProtocol with Instrumented {
+trait BaseRouting extends Directives with Json4sProtocol with Instrumented {
 
   implicit val context = system.dispatcher
   implicit val materializer = ActorMaterializer()
@@ -30,7 +28,7 @@ trait BaseRouting extends Json4sProtocol with Instrumented {
 
   def measured(nameGenerator: HttpRequest => String = measurementNameDefault): Directive0 = {
     extractRequestContext.flatMap { ctx =>
-      val t = timer(nameGenerator(ctx.request)).timerContext()
+      val t = metrics.timer(nameGenerator(ctx.request)).timerContext()
       mapResponse { response =>
         t.stop()
         response
@@ -46,9 +44,8 @@ trait BaseRouting extends Json4sProtocol with Instrumented {
     import akka.http.scaladsl.util.FastFuture._
 
     Directive { inner => ctx =>
-      import ctx.executionContext
 
-      val tc = timer(nameGenerator(ctx.request)).timerContext()
+      val tc = metrics.timer(nameGenerator(ctx.request)).timerContext()
       val f = future.fast.transformWith(t => inner(Tuple1(t))(ctx))
       f.onComplete(_ => tc.stop())
       f

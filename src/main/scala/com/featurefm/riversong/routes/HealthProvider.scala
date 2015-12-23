@@ -18,31 +18,28 @@ trait HealthProvider extends BaseRouting {
 
   implicit val timeout = Timeout(5.seconds)
 
-  val alerts: mutable.Buffer[HealthRollup] = mutable.Buffer()
-
   /**
    * Run the health checks and return the current system state
    * @return a future to an instance of ``ContainerHealth``
    */
-  def runChecks: Future[ContainerHealth] = {
+  def runChecks: Future[InternalContainerHealth] = {
 
     log.debug("Checking the system's health")
 
     // Ask for the health of each check
-    val future = sendHealthRequests
-    val p = Promise[ContainerHealth]()
+    val p = Promise[InternalContainerHealth]()
 
-    future onComplete {
+    sendHealthRequests onComplete {
       case Success(checks) =>
+        val alerts: mutable.Buffer[HealthRollup] = mutable.Buffer()
         // Rollup alerts for any critical or degraded checks
-        checks.foreach(checkStatuses)
+        checks.foreach(checkStatuses(alerts))
         // Rollup the statuses
         val overallHealth = rollupStatuses(alerts)
-        alerts.clear()
         p success ContainerHealth(system.name, DateTime.now, overallHealth.state, overallHealth.details, checks)
       case Failure(e) =>
         log.error("An error occurred while fetching the system's health", e)
-        p success ContainerHealth(system.name, DateTime.now, HealthState.CRITICAL, e.getMessage, Nil)
+        p success ContainerHealth(system.name, DateTime.now, HealthState.CRITICAL, e.getMessage)
     }
 
     p.future
@@ -50,17 +47,15 @@ trait HealthProvider extends BaseRouting {
 
   /**
    * Rollup the overall status and critical alerts for each check
-   * @param checks
-   * @return
    */
-  private def rollupStatuses(checks: mutable.Buffer[HealthRollup]): HealthRollup = {
+  private def rollupStatuses(alerts: mutable.Buffer[HealthRollup]): HealthRollup = {
     // Check if all checks are running
     if (alerts.isEmpty) {
       HealthRollup(HealthState.OK, "All sub-systems report perfect health")
     }
     else {
-      val status = if (checks.forall(c => c.state == HealthState.DEGRADED)) HealthState.DEGRADED else HealthState.CRITICAL
-      val details = for (c <- checks) yield c.details
+      val status = if (alerts.forall(c => c.state == HealthState.DEGRADED)) HealthState.DEGRADED else HealthState.CRITICAL
+      val details = for (c <- alerts) yield c.details
 
       HealthRollup(status, details.mkString("; "))
     }
@@ -68,21 +63,16 @@ trait HealthProvider extends BaseRouting {
 
   /**
    * Rollup alerts for all checks that have a CRITICAL or DEGRADED state
-   * @param info
    */
-  private def checkStatuses(info: HealthInfo) {
-    def alert(state: HealthState): Boolean = {
-      if (state == HealthState.CRITICAL || state == HealthState.DEGRADED) true else false
-    }
+  private def checkStatuses(alerts: mutable.Buffer[HealthRollup])(tuple: (String,HealthInfo)) {
 
-    def healthDetails(info: HealthInfo): String = {
-      info.name + "[" + info.state + "] - " + info.details
-    }
+    val (name, info) = tuple
 
-    if (info.checks.isEmpty && alert(info.state)) {
-      alerts += HealthRollup(info.state, healthDetails(info))
-    }
-    else if (alert(info.state)) {
+    def alert(state: HealthState): Boolean = state == HealthState.CRITICAL || state == HealthState.DEGRADED
+
+    def healthDetails(info: HealthInfo): String = name + "[" + info.state + "] - " + info.details
+
+    if (alert(info.state)) {
       alerts += HealthRollup(info.state, healthDetails(info))
     }
   }
@@ -91,11 +81,11 @@ trait HealthProvider extends BaseRouting {
    * Send off all of the health checks so the system can gather them
    * @return a `Future` which contains a sequence of `HealthInfo`
    */
-  private def sendHealthRequests: Future[Seq[HealthInfo]] = {
+  private def sendHealthRequests: Future[Seq[(String,HealthInfo)]] = {
 
-    val future = Future.traverse(Health(system).getChecks)(h => h.getHealth.mapTo[HealthInfo])
+    val future = Future.traverse(Health(system).getChecks)(h => h.getHealth map (h.healthCheckName -> _))
 
-    val p = Promise[Seq[HealthInfo]]()
+    val p = Promise[Seq[(String,HealthInfo)]]()
     future.onComplete({
       case Failure(t) =>
         log.error("Error fetching the system's health health", t)
@@ -106,8 +96,7 @@ trait HealthProvider extends BaseRouting {
 
     p.future
   }
-
-  def serialize(health: ContainerHealth): JValue = {
+  def serialize(health: InternalContainerHealth): JValue = {
     Extraction.decompose(health)(myFormats)
   }
 

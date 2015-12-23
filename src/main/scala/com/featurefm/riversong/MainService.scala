@@ -1,15 +1,17 @@
 package com.featurefm.riversong
 
-import akka.actor.ActorSystem
+import akka.actor.{DeadLetter, Props, ActorSystem}
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.RouteResult.{Rejected, Complete}
 import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.stream.ActorMaterializer
+import com.featurefm.riversong.metrics.{Instrumented, DeadLetterMetrics}
 import com.featurefm.riversong.metrics.reporting.MetricsReportingManager
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.directives._
 import akka.http.scaladsl.server.Directives._
+import nl.grons.metrics.scala.MetricName
 import org.joda.time.format.PeriodFormatterBuilder
 import org.joda.time.Period
 
@@ -18,7 +20,7 @@ import scala.compat.Platform
 /**
  * Created by yardena on 9/20/15.
  */
-abstract class MainService(val name: String = "Spoilers") extends App with Configurable { self: App =>
+abstract class MainService(val name: String = "Spoilers") extends App with Configurable with Instrumented { self: App =>
   implicit val system = ActorSystem(name)
   implicit val executor = system.dispatcher
   implicit val materializer = ActorMaterializer()
@@ -28,7 +30,8 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
   val host = config.getString("akka.http.server.listen_ip")
   val port = config.getInt("akka.http.server.listen_port")
 
-  private lazy val requestCounter = assembly.metrics.counter("requests")
+  override lazy val metricBaseName = MetricName(system.name)
+  private lazy val requestCounter = metrics.counter("requests")
 
   def assembly:ServiceAssembly
 
@@ -65,10 +68,12 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
       log.info(s"Server ${bind.localAddress} started")
       val startTime = Platform.currentTime
       val formatter = new PeriodFormatterBuilder().appendDays().appendSuffix("d").appendHours().appendSuffix("h").appendMinutes().appendSuffix("m").printZeroAlways().appendSeconds().appendSuffix("s").toFormatter
-      assembly.metrics.gauge("uptime"){ new Period(Platform.currentTime - startTime).toString(formatter) }
+      metrics.gauge("uptime"){ new Period(Platform.currentTime - startTime).toString(formatter) }
   }
 
   // Start the metrics reporters
   system.actorOf(MetricsReportingManager.props())
+
+  system.eventStream.subscribe(system.actorOf(Props(classOf[DeadLetterMetrics]),"dead-letters-metric"), classOf[DeadLetter])
 
 }

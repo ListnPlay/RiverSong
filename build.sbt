@@ -14,13 +14,13 @@ resolvers ++= Seq(
 
 val log4jVersion  = "2.4.1"
 
-val akkaVersion   = "2.4.0"
+val akkaVersion   = "2.4.1"
 
-val streamsVersion = "2.0-M1"
+val streamsVersion = "2.0"
 
 val json4sVersion = "3.3.0"
 
-val macWireVersion = "1.0.5"
+val macWireVersion = "1.0.7"
 
 val jacksonVersion = "2.6.3"
 
@@ -33,15 +33,15 @@ libraryDependencies ++= Seq(
   "org.slf4j"                %  "slf4j-api"         % "1.7.12",
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
-  "com.typesafe.akka"        %% "akka-stream-experimental"          % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11"),
-  "com.typesafe.akka"        %% "akka-http-core-experimental"       % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11"),
-  "com.typesafe.akka"        %% "akka-http-experimental"            % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11"),
-  "com.typesafe.akka"        %% "akka-http-spray-json-experimental" % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11"),
+  "com.typesafe.akka"        %% "akka-stream-experimental"          % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
+  "com.typesafe.akka"        %% "akka-http-core-experimental"       % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
+  "com.typesafe.akka"        %% "akka-http-experimental"            % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
+  "com.typesafe.akka"        %% "akka-http-spray-json-experimental" % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
   "com.fasterxml.jackson.core" % "jackson-core"        % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.3.0" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11"),
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.4.0" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11") exclude("com.typesafe", "config"),
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion,
   "com.softwaremill.macwire" %% "runtime"           % macWireVersion,
@@ -60,7 +60,7 @@ libraryDependencies ++= Seq(
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.2.1",
+    version := "0.3-SNAPSHOT",
     scalaVersion := "2.11.7",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
