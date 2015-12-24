@@ -38,7 +38,7 @@ trait ServiceClient extends Configurable with Json4sProtocol {
         throw new RuntimeException(m.message)
     }
 
-  def status: Future[Boolean] = http.send(Get("/status")) map { _.status match {
+  def status: Future[Boolean] = http.send(Get("/status"), "status") map { _.status match {
     case OK => true
     case _ => false
   }}
