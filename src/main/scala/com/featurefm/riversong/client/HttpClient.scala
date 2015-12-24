@@ -22,7 +22,7 @@ class HttpClient private (flow: => Flow[HttpRequest, HttpResponse, Any])(implici
 
   protected val log = Logging(system, getClass)
 
-  def send(request: HttpRequest): Future[HttpResponse] = timeEventually(s"${request.method.value} ${request.uri}") {
+  def send(request: HttpRequest): Future[HttpResponse] = timeEventually(s"${request.method.value} ${request.uri.path.toString()}") {
     Source.single(request).via(flow).runWith(Sink.head)
   }
 
