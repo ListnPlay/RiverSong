@@ -16,7 +16,7 @@ val log4jVersion  = "2.4.1"
 
 val akkaVersion   = "2.4.1"
 
-val streamsVersion = "2.0"
+val streamsVersion = "2.0.1"
 
 val json4sVersion = "3.3.0"
 
@@ -41,7 +41,7 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.4.0" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11") exclude("com.typesafe", "config"),
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.4.1" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11") exclude("com.typesafe", "config"),
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion,
   "com.softwaremill.macwire" %% "runtime"           % macWireVersion,
@@ -60,7 +60,7 @@ libraryDependencies ++= Seq(
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.3.1",
+    version := "0.3.2",
     scalaVersion := "2.11.7",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
