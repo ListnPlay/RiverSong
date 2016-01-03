@@ -16,6 +16,7 @@ import org.joda.time.format.PeriodFormatterBuilder
 import org.joda.time.Period
 
 import scala.compat.Platform
+import scala.util.{Failure, Success}
 
 /**
  * Created by yardena on 9/20/15.
@@ -63,12 +64,15 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
     { ctx: RequestContext => requestCounter.inc(); ctx } andThen rawRoutes
   }
 
-  Http().bindAndHandle(routes, host, port) onSuccess {
-    case bind: Http.ServerBinding =>
+  Http().bindAndHandle(routes, host, port) onComplete {
+    case Success(bind: Http.ServerBinding) =>
       log.info(s"Server ${bind.localAddress} started")
       val startTime = Platform.currentTime
       val formatter = new PeriodFormatterBuilder().appendDays().appendSuffix("d").appendHours().appendSuffix("h").appendMinutes().appendSuffix("m").printZeroAlways().appendSeconds().appendSuffix("s").toFormatter
       metrics.gauge("uptime"){ new Period(Platform.currentTime - startTime).toString(formatter) }
+    case Failure(e) =>
+      log.info("Server could not start, shutting down")
+      system.terminate()
   }
 
   // Start the metrics reporters
