@@ -1,30 +1,36 @@
 package com.featurefm.riversong
 
-import akka.actor.{ActorLogging, Props, Actor, ActorSystem}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Directives._
 import com.featurefm.riversong.health._
 import com.featurefm.riversong.metrics.InstrumentedActor
 import com.featurefm.riversong.routes.BaseRouting
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 /**
  * Created by yardena on 11/9/15.
  */
 object TestService extends MainService {
-  override lazy val assembly: ServiceAssembly = new ServiceAssembly() {
+  override lazy val assembly = new ServiceAssembly with MyAssembly
 
-    lazy val ping = new Ping
+  override def services = super.services :+ assembly.ping
 
-    override def routes: Route = lifecycle.routes ~ ping.routes
+}
 
-    Health(TestService.this.system).addCheck(new HealthCheck {
-      override val healthCheckName: String = "test"
-      override def getHealth: Future[HealthInfo] = Future successful HealthInfo(HealthState.OK, "everything is fine")
-    })
+trait MyAssembly extends ServiceAssembly {
+  import com.softwaremill.macwire._
 
-  }
+  lazy val foo: FooService = timed(wire[FooService])
+
+  lazy val ping: Ping = wire[Ping]
+
+  Health().addCheck(new HealthCheck {
+    override val healthCheckName: String = "test"
+    override def getHealth: Future[HealthInfo] = Future successful HealthInfo(HealthState.OK, "everything is fine")
+  })
+
 }
 
 class MyActor extends Actor with ActorLogging with InstrumentedActor {
@@ -38,7 +44,7 @@ class MyActor extends Actor with ActorLogging with InstrumentedActor {
 
 }
 
-class Ping(implicit val system: ActorSystem) extends BaseRouting {
+class Ping(foo: FooService)(implicit val system: ActorSystem) extends BaseRouting {
   var actor = system.actorOf(Props[MyActor])
 
   override def routes: Route = {
@@ -54,6 +60,16 @@ class Ping(implicit val system: ActorSystem) extends BaseRouting {
         actor = system.actorOf(Props[MyActor])
         complete("done")
       }
+    } ~
+    path("foo") {
+      onComplete(foo.testMe("World")) {
+        case Success(s) => complete(s)
+        case Failure(e) => complete("Error")
+      }
     }
   }
+}
+
+class FooService {
+  def testMe(s: String): Future[String] = Future successful s"Hello $s!"
 }

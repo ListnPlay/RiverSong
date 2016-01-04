@@ -20,7 +20,7 @@ val streamsVersion = "2.0.1"
 
 val json4sVersion = "3.3.0"
 
-val macWireVersion = "1.0.7"
+val macWireVersion = "2.2.2"
 
 val jacksonVersion = "2.6.3"
 
@@ -43,8 +43,9 @@ libraryDependencies ++= Seq(
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
   "de.heikoseeberger"        %% "akka-http-json4s"  % "1.4.1" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11") exclude("com.typesafe", "config"),
 
-  "com.softwaremill.macwire" %% "macros"            % macWireVersion,
-  "com.softwaremill.macwire" %% "runtime"           % macWireVersion,
+  "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
+  "com.softwaremill.macwire" %% "util"              % macWireVersion,
+  "com.softwaremill.macwire" %% "proxy"             % macWireVersion,
 
   "io.dropwizard.metrics"    %  "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"    %  "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
@@ -60,7 +61,7 @@ libraryDependencies ++= Seq(
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.3.3",
+    version := "0.3.4-SNAPSHOT",
     scalaVersion := "2.11.7",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),

@@ -13,7 +13,7 @@ import scala.util.Try
 /**
  * Created by yardena on 8/6/15.
  */
-trait BaseRouting extends Directives with Json4sProtocol with Instrumented {
+trait BaseRouting extends RiverSongRouting with Directives with Json4sProtocol with Instrumented {
 
   implicit val context = system.dispatcher
   implicit val materializer = ActorMaterializer()
@@ -51,8 +51,5 @@ trait BaseRouting extends Directives with Json4sProtocol with Instrumented {
       f
     }
   }
-
-
-  def routes: Route
 
 }
