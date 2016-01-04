@@ -7,6 +7,7 @@ import org.json4s.JsonDSL._
 import scala.collection.JavaConversions._
 import scala.collection._
 import scala.collection.convert.Wrappers.JMapWrapper
+import scala.concurrent.duration.Duration
 
 class MetricsWriter(registry: MetricRegistry) {
 
@@ -133,8 +134,8 @@ class MetricsWriter(registry: MetricRegistry) {
 
   private def processTimer(metric: com.codahale.metrics.Timer): JObject = {
     ("duration" ->
-      ("unit" -> "nanoseconds") ~
-        writeSampling(metric)
+      ("unit" -> "ms") ~
+        writeTimer(metric)
       ) ~
       ("rate" -> writeMeteredFields(metric))
   }
@@ -180,28 +181,42 @@ class MetricsWriter(registry: MetricRegistry) {
     }
   }
 
+  private def writeTimer(metric: Timer): JObject = {
+    val snapshot = metric.getSnapshot
+
+    ("min" -> Duration.fromNanos(snapshot.getMin).toMillis) ~
+    ("max" -> Duration.fromNanos(snapshot.getMax).toMillis) ~
+    ("mean" -> Duration.fromNanos(snapshot.getMean).toMillis) //~
+    //    ("median" -> snapshot.getMedian) ~
+    //    ("std_dev" -> snapshot.getStdDev) ~
+    //    ("p75" -> snapshot.get75thPercentile) ~
+    //    ("p95" -> snapshot.get95thPercentile) ~
+    //    ("p98" -> snapshot.get98thPercentile) ~
+    //    ("p99" -> snapshot.get99thPercentile) ~
+    //    ("p999" -> snapshot.get999thPercentile)
+  }
   private def writeSampling(metric: Sampling): JObject = {
     val snapshot = metric.getSnapshot
 
     ("min" -> snapshot.getMin) ~
     ("max" -> snapshot.getMax) ~
-    ("mean" -> snapshot.getMean) ~
-    ("median" -> snapshot.getMedian) ~
-    ("std_dev" -> snapshot.getStdDev) ~
-    ("p75" -> snapshot.get75thPercentile) ~
-    ("p95" -> snapshot.get95thPercentile) ~
-    ("p98" -> snapshot.get98thPercentile) ~
-    ("p99" -> snapshot.get99thPercentile) ~
-    ("p999" -> snapshot.get999thPercentile)
+    ("mean" -> snapshot.getMean) //~
+//    ("median" -> snapshot.getMedian) ~
+//    ("std_dev" -> snapshot.getStdDev) ~
+//    ("p75" -> snapshot.get75thPercentile) ~
+//    ("p95" -> snapshot.get95thPercentile) ~
+//    ("p98" -> snapshot.get98thPercentile) ~
+//    ("p99" -> snapshot.get99thPercentile) ~
+//    ("p999" -> snapshot.get999thPercentile)
   }
 
   private def writeMeteredFields(metric: Metered): JObject = {
     ("unit" -> "events/second") ~
     ("count" -> metric.getCount) ~
-    ("mean" -> metric.getMeanRate) ~
-    ("m1" -> metric.getOneMinuteRate) ~
-    ("m5" -> metric.getFiveMinuteRate) ~
-    ("m15" -> metric.getFifteenMinuteRate)
+    ("mean" -> metric.getMeanRate ) //~
+//    ("m1" -> metric.getOneMinuteRate) ~
+//    ("m5" -> metric.getFiveMinuteRate) ~
+//    ("m15" -> metric.getFifteenMinuteRate)
   }
 
   private def checkNan(num: AnyVal): JValue = {

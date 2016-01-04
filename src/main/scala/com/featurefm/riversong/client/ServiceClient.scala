@@ -25,7 +25,7 @@ trait ServiceClient extends Configurable with Json4sProtocol {
   lazy val host = config.getString(s"services.$serviceName.host")
   lazy val port = config.getInt(s"services.$serviceName.port")
 
-  lazy val http = HttpClient.http(host, port)(system)
+  lazy val http = HttpSiteClient(host, port)(system) //HttpClient.http(host, port)(system)
 
   implicit lazy val executor = http.executor
   implicit lazy val materializer = http.materializer

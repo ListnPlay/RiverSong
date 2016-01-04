@@ -33,10 +33,13 @@ class HttpClient private (flow: => Flow[HttpRequest, HttpResponse, Any], host: S
 
 object HttpClient {
 
+  def apply(host: String, port: Int = 80)(implicit system: ActorSystem): HttpClient = http(host, port)(system)
   def http(host: String, port: Int = 80)(implicit system: ActorSystem): HttpClient = {
     require(host.startsWith("http://") || host.indexOf("://") < 0, "Protocol must be HTTP")
     new HttpClient(Http().outgoingConnection(host, port), host, port)
   }
+
+  def secure(host: String, port: Int = 443)(implicit system: ActorSystem): HttpClient = https(host, port)(system)
   def https(host: String, port: Int = 443)(implicit system: ActorSystem): HttpClient = {
     require(host.startsWith("https://") || host.indexOf("://") < 0, "Protocol must be HTTPS")
     new HttpClient(Http().outgoingConnectionTls(host, port), host, port)
