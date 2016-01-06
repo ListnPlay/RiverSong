@@ -1,15 +1,10 @@
 import sbt.Keys._
 
 resolvers ++= Seq(
-  "Typesafe repository snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
   "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/",
   "Sonatype repo"                at "https://oss.sonatype.org/content/groups/scala-tools/",
   "Sonatype releases"            at "https://oss.sonatype.org/content/repositories/releases",
-  "Sonatype snapshots"           at "https://oss.sonatype.org/content/repositories/snapshots",
-  "Sonatype staging"             at "http://oss.sonatype.org/content/repositories/staging",
-  "Java.net Maven2 Repository"   at "http://download.java.net/maven/2/",
-  "hseeberger at bintray"        at "http://dl.bintray.com/hseeberger/maven",
-  "spray repo"                   at "http://repo.spray.io"
+  "hseeberger at bintray"        at "http://dl.bintray.com/hseeberger/maven"
 )
 
 val log4jVersion  = "2.4.1"
@@ -61,7 +56,7 @@ libraryDependencies ++= Seq(
 lazy val root = (project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.3.5",
+    version := "0.3.6",
     scalaVersion := "2.11.7",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),

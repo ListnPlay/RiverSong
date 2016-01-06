@@ -186,8 +186,8 @@ class MetricsWriter(registry: MetricRegistry) {
 
     ("min" -> Duration.fromNanos(snapshot.getMin).toMillis) ~
     ("max" -> Duration.fromNanos(snapshot.getMax).toMillis) ~
-    ("mean" -> Duration.fromNanos(snapshot.getMean).toMillis) //~
-    //    ("median" -> snapshot.getMedian) ~
+    ("mean" -> Duration.fromNanos(snapshot.getMean).toMillis) ~
+    ("median" -> Duration.fromNanos(snapshot.getMedian).toMillis) //~
     //    ("std_dev" -> snapshot.getStdDev) ~
     //    ("p75" -> snapshot.get75thPercentile) ~
     //    ("p95" -> snapshot.get95thPercentile) ~
@@ -200,8 +200,8 @@ class MetricsWriter(registry: MetricRegistry) {
 
     ("min" -> snapshot.getMin) ~
     ("max" -> snapshot.getMax) ~
-    ("mean" -> snapshot.getMean) //~
-//    ("median" -> snapshot.getMedian) ~
+    ("mean" -> snapshot.getMean) ~
+    ("median" -> snapshot.getMedian) //~
 //    ("std_dev" -> snapshot.getStdDev) ~
 //    ("p75" -> snapshot.get75thPercentile) ~
 //    ("p95" -> snapshot.get95thPercentile) ~

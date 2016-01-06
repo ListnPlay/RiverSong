@@ -4,11 +4,8 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.featurefm.riversong.Json4sProtocol
-import com.featurefm.riversong.metrics.Instrumented
-import nl.grons.metrics.scala.MetricName
 
 import scala.concurrent.Future
 
@@ -16,31 +13,26 @@ import scala.concurrent.Future
  * Created by yardena on 11/1/15.
  */
 class HttpClient private (flow: => Flow[HttpRequest, HttpResponse, Any], host: String, port: Int)(implicit val system: ActorSystem)
-  extends Json4sProtocol with Instrumented {
-
-  implicit val materializer = ActorMaterializer()
-  implicit val executor = system.dispatcher
+  extends HttpClientInterface with Json4sProtocol {
 
   protected val log = Logging(system, getClass)
 
-  override lazy val metricBaseName: MetricName = MetricName(this.getClass.getSimpleName, s"$host:$port")
+  lazy val name: String = s"$host:$port"
 
-  def send(request: HttpRequest, requestName: String = "*"): Future[HttpResponse] = timeEventually(s"${request.method.value} $requestName") {
+  def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse] = {
     Source.single(request).via(flow).runWith(Sink.head)
   }
 
 }
 
-object HttpClient {
+object HttpClient extends HttpClientFactory with MetricImplicits {
 
-  def apply(host: String, port: Int = 80)(implicit system: ActorSystem): HttpClient = http(host, port)(system)
-  def http(host: String, port: Int = 80)(implicit system: ActorSystem): HttpClient = {
+  def http(host: String, port: Int = 80)(implicit system: ActorSystem) = {
     require(host.startsWith("http://") || host.indexOf("://") < 0, "Protocol must be HTTP")
     new HttpClient(Http().outgoingConnection(host, port), host, port)
   }
 
-  def secure(host: String, port: Int = 443)(implicit system: ActorSystem): HttpClient = https(host, port)(system)
-  def https(host: String, port: Int = 443)(implicit system: ActorSystem): HttpClient = {
+  def https(host: String, port: Int = 443)(implicit system: ActorSystem) = {
     require(host.startsWith("https://") || host.indexOf("://") < 0, "Protocol must be HTTPS")
     new HttpClient(Http().outgoingConnectionTls(host, port), host, port)
   }
