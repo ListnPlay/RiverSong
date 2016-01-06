@@ -3,6 +3,7 @@ package com.featurefm.riversong.client
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpResponse, HttpRequest}
 import akka.stream.ActorMaterializer
+import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
 import nl.grons.metrics.scala.MetricName
 
@@ -11,7 +12,7 @@ import scala.concurrent.Future
 /**
   * Created by yardena on 1/6/16.
   */
-trait HttpClientInterface extends Instrumented {
+trait HttpClientInterface extends Json4sProtocol with Instrumented {
 
   implicit val system: ActorSystem
   implicit val materializer = ActorMaterializer()

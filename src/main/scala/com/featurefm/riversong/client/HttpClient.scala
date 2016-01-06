@@ -5,7 +5,6 @@ import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.featurefm.riversong.Json4sProtocol
 
 import scala.concurrent.Future
 
@@ -13,7 +12,7 @@ import scala.concurrent.Future
  * Created by yardena on 11/1/15.
  */
 class HttpClient private (flow: => Flow[HttpRequest, HttpResponse, Any], host: String, port: Int)(implicit val system: ActorSystem)
-  extends HttpClientInterface with Json4sProtocol {
+  extends HttpClientInterface {
 
   protected val log = Logging(system, getClass)
 

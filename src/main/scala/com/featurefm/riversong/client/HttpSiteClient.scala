@@ -6,7 +6,6 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.scaladsl._
 import com.codahale.metrics.Timer
-import com.featurefm.riversong.Json4sProtocol
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
@@ -16,7 +15,7 @@ import scala.util.Try
  * Created by yardena on 1/4/16.
  */
 class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int = if (secure) 443 else 80)
-                             (implicit val system: ActorSystem) extends HttpClientInterface with Json4sProtocol {
+                             (implicit val system: ActorSystem) extends HttpClientInterface {
 
   protected val log = Logging(system, getClass)
 
