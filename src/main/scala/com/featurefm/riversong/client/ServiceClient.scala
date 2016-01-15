@@ -11,6 +11,7 @@ import com.featurefm.riversong.{Json4sProtocol, Configurable}
 import com.featurefm.riversong.message.Message
 
 import scala.concurrent.Future
+import scala.util.{Try, Failure}
 
 /**
  * Created by yardena on 11/8/15.
@@ -36,12 +37,18 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
   implicit lazy val materializer = http.materializer
 
   def failWith(response: HttpResponse): Future[Nothing] =
-    Unmarshal(response.entity).to[Message] map { m: Message =>
       if (response.status == BadRequest)
-        throw new IllegalArgumentException(m.message)
+        Unmarshal(response.entity).to[Message] map {
+          m: Message => throw new IllegalArgumentException(m.message)
+        } recover {
+          case e => throw new IllegalArgumentException(s"$serviceName-manager returned an error '${response.status.value}'")
+        }
       else
-        throw new RuntimeException(m.message)
-    }
+        Unmarshal(response.entity).to[Message] map {
+          m: Message => throw new RuntimeException(m.message)
+        } recover {
+          case e => throw new RuntimeException(s"$serviceName-manager returned an error '${response.status.value}'")
+        }
 
   def status: Future[Boolean] = http.send(Get("/status"), "status") map { _.status match {
     case OK => true
