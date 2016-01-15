@@ -24,11 +24,12 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
   private val httpFlow = if (secure) Http().cachedHostConnectionPoolTls[Timer.Context](host, port)
                     else Http().cachedHostConnectionPool[Timer.Context](host, port)
 
-  val flows = TrieMap[String,Flow[HttpRequest, Try[HttpResponse], Http.HostConnectionPool]]()
+  private val flows = TrieMap[String,Flow[HttpRequest, Try[HttpResponse], Http.HostConnectionPool]]()
 
-  def getTimedFlow(name: String) = flows.getOrElseUpdate(name, makeTimedFlow(name))
+  def getTimedFlow(name: String): Flow[HttpRequest, Try[HttpResponse], Http.HostConnectionPool] =
+    flows.getOrElseUpdate(name, makeTimedFlow(name))
 
-  def makeTimedFlow(name: String) = {
+  def makeTimedFlow(name: String): Flow[HttpRequest, Try[HttpResponse], Http.HostConnectionPool] = {
     val req = (r: HttpRequest) => (r, metrics.timer(name).timerContext())
     val res = (t: (Try[HttpResponse], Timer.Context)) => { t._2.stop(); t._1 }
 
@@ -46,4 +47,11 @@ object HttpSiteClient extends HttpClientFactory with MetricImplicits {
   def http(host: String, port: Int = 80)(implicit system: ActorSystem) = new HttpSiteClient(secure = false)(host, port)
 
   def https(host: String, port: Int = 443)(implicit system: ActorSystem) = new HttpSiteClient(secure = true)(host, port)
+
+  def site(host: String, port: Int = 80)(implicit system: ActorSystem) =
+    new HttpSiteClient(secure = false)(host, port)
+
+  def secureSite(host: String, port: Int = 443)(implicit system: ActorSystem) =
+    new HttpSiteClient(secure = true)(host, port)
+
 }

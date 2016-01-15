@@ -31,7 +31,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"        %% "akka-stream-experimental"          % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
   "com.typesafe.akka"        %% "akka-http-core-experimental"       % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
   "com.typesafe.akka"        %% "akka-http-experimental"            % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
-  "com.typesafe.akka"        %% "akka-http-spray-json-experimental" % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
   "com.fasterxml.jackson.core" % "jackson-core"        % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
@@ -53,10 +52,10 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"        %% "akka-http-testkit-experimental" % streamsVersion % "test"
 )
 
-lazy val root = (project in file(".")).settings(
+lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.3.7",
+    version := "0.3.8",
     scalaVersion := "2.11.7",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
