@@ -6,10 +6,10 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.scaladsl._
 import com.codahale.metrics.Timer
+import com.featurefm.riversong.client.InContext.JustRequest
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
-import scala.util.Try
 
 /**
  * Created by yardena on 1/4/16.
@@ -21,23 +21,29 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
 
   lazy val name: String = s"$host:$port"
 
-  private val httpFlow = if (secure) Http().cachedHostConnectionPoolTls[Timer.Context](host, port)
-                    else Http().cachedHostConnectionPool[Timer.Context](host, port)
+  private val httpFlow = if (secure) Http().cachedHostConnectionPoolTls[Context](host, port)
+                                else Http().cachedHostConnectionPool   [Context](host, port)
 
-  private val flows = TrieMap[String,Flow[HttpRequest, Try[HttpResponse], Http.HostConnectionPool]]()
+  private val flows = TrieMap[String, FlowType]()
 
-  def getTimedFlow(name: String): Flow[HttpRequest, Try[HttpResponse], Http.HostConnectionPool] =
-    flows.getOrElseUpdate(name, makeTimedFlow(name))
+  def getTimedFlow(name: String): FlowType = flows.getOrElseUpdate(name, makeTimedFlow(name))
 
-  def makeTimedFlow(name: String): Flow[HttpRequest, Try[HttpResponse], Http.HostConnectionPool] = {
-    val req = (r: HttpRequest) => (r, metrics.timer(name).timerContext())
-    val res = (t: (Try[HttpResponse], Timer.Context)) => { t._2.stop(); t._1 }
+  def makeTimedFlow(name: String): FlowType = {
 
-    BidiFlow.fromFunctions(req, res).joinMat(httpFlow)(Keep.right)
+    def attachTimerToRequest(x: RequestInContext): RequestInContext#Tuple =
+      x.with_("timer", metrics.timer(name).timerContext()).toTuple
+
+    def stopTimerReturnRequest(x: ResponseInContext#Tuple): ResponseInContext = {
+      val y: ResponseInContext = InContext.fromTuple(x)
+      y.get[Timer.Context]("timer").stop()
+      y //y.without("timer")
+    }
+
+    Flow[InContext[HttpRequest]].map(attachTimerToRequest).via(httpFlow).map(stopTimerReturnRequest)
   }
 
   def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse] = {
-    Source.single(request).via(getTimedFlow(naming(request))).runWith(Sink.head).map(_.get)
+    Source.single[RequestInContext](request).via(getTimedFlow(naming(request))).runWith(Sink.head).map(_.unwrap.get)
   }
 
 }
@@ -55,3 +61,4 @@ object HttpSiteClient extends HttpClientFactory with MetricImplicits {
     new HttpSiteClient(secure = true)(host, port)
 
 }
+
