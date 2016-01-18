@@ -24,7 +24,7 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
 
   def isServiceCritical: Boolean
 
-  override val healthCheckName: String = serviceName
+  override lazy val healthCheckName: String = serviceName
 
   protected val log = Logging(system, getClass)
 

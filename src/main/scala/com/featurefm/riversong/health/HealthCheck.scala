@@ -4,7 +4,7 @@ import scala.concurrent.Future
 
 trait HealthCheck {
 
-  val healthCheckName = getClass.getSimpleName
+  lazy val healthCheckName = getClass.getSimpleName
 
   /**
    * Fetch the health for this registered checker.

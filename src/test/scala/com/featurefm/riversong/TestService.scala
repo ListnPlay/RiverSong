@@ -27,7 +27,7 @@ trait MyAssembly extends ServiceAssembly {
   lazy val ping: Ping = wire[Ping]
 
   Health().addCheck(new HealthCheck {
-    override val healthCheckName: String = "test"
+    override lazy val healthCheckName: String = "test"
     override def getHealth: Future[HealthInfo] = Future successful HealthInfo(HealthState.OK, "everything is fine")
   })
 
