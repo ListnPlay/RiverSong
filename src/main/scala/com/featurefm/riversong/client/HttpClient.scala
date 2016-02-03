@@ -24,7 +24,7 @@ class HttpClient private (flow: => Flow[HttpRequest, HttpResponse, Any], host: S
 
 }
 
-object HttpClient extends HttpClientFactory with MetricImplicits {
+object HttpClient extends HttpClientFactory[HttpClient] with MetricImplicits {
 
   def http(host: String, port: Int = 80)(implicit system: ActorSystem) = {
     require(host.startsWith("http://") || host.indexOf("://") < 0, "Protocol must be HTTP")

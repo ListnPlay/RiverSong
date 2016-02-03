@@ -48,7 +48,7 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
 
 }
 
-object HttpSiteClient extends HttpClientFactory with MetricImplicits {
+object HttpSiteClient extends HttpClientFactory[HttpSiteClient] with MetricImplicits {
 
   def http(host: String, port: Int = 80)(implicit system: ActorSystem) = new HttpSiteClient(secure = false)(host, port)
 

@@ -27,12 +27,12 @@ trait HttpClientInterface extends Json4sProtocol with Instrumented {
 
 }
 
-trait HttpClientFactory {
+trait HttpClientFactory[C <: HttpClientInterface] {
 
-  def http(host: String, port: Int = 80)(implicit system: ActorSystem): HttpClientInterface
-  def https(host: String, port: Int = 443)(implicit system: ActorSystem): HttpClientInterface
+  def http(host: String, port: Int = 80)(implicit system: ActorSystem): C
+  def https(host: String, port: Int = 443)(implicit system: ActorSystem): C
 
-  def apply(host: String, port: Int = 80)(implicit system: ActorSystem): HttpClientInterface = http(host, port)
-  def secure(host: String, port: Int = 443)(implicit system: ActorSystem): HttpClientInterface = https(host, port)
+  def apply(host: String, port: Int = 80)(implicit system: ActorSystem): C = http(host, port)
+  def secure(host: String, port: Int = 443)(implicit system: ActorSystem): C = https(host, port)
 
 }

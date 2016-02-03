@@ -3,15 +3,16 @@ package com.featurefm.riversong.client
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.StatusCodes.{OK, BadRequest}
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.scaladsl.{Keep, Sink, Source, Flow}
 import com.featurefm.riversong.health.{HealthState, HealthInfo, HealthCheck}
 import com.featurefm.riversong.{Json4sProtocol, Configurable}
 import com.featurefm.riversong.message.Message
 
 import scala.concurrent.Future
-import scala.util.{Try, Failure}
+import scala.util.{Try, Success, Failure}
 
 /**
  * Created by yardena on 11/8/15.
@@ -50,10 +51,12 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
           case e => throw new RuntimeException(s"$serviceName-manager returned an error '${response.status.value}'")
         }
 
-  def status: Future[Boolean] = http.send(Get("/status"), "status") map { _.status match {
-    case OK => true
-    case _ => false
-  }}
+  lazy val statusFlow = Source.single[InContext[HttpRequest]](Get("/status"))
+                          .via(http.getTimedFlow("status"))
+                          .map(_.unwrap.map(_.status))
+//                          .toMat(Sink.head)(Keep.right)
+
+  def status: Future[Boolean] = statusFlow.runWith(Sink.head) map (_.get == OK)
 
   override def getHealth: Future[HealthInfo] = status map { res =>
     HealthInfo(HealthState.OK, "")

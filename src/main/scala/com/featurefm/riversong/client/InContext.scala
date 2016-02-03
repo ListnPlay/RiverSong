@@ -10,11 +10,10 @@ import scala.util.Try
   */
 
 trait InContext[T] {
-  type Context = Map[String, Any]
   type Tuple = (T, Context)
   def context: Context
   def unwrap: T
-  def toTuple: (T, Map[String, Any]) = (unwrap, context)
+  def toTuple: Tuple = (unwrap, context)
   def with_(key: String, value: Any): InContext[T]
   def without(key: String): InContext[T]
   def get[S](key: String): S = context(key).asInstanceOf[S]
@@ -25,7 +24,7 @@ object InContext {
   implicit def fromTuple(t: ResponseInContext#Tuple): ResponseInContext = WrappedResponse(t._1, t._2)
   implicit def fromReqTuple(t: RequestInContext#Tuple): RequestInContext = WrappedRequest(t._1, t._2) //probably not needed
 
-  implicit def toTuple[T](x: InContext[T]): (T, Map[String, Any]) = x.toTuple
+  implicit def toTuple[T](x: InContext[T]): (T, Context) = x.toTuple
 
   abstract sealed class Just[A](r: A) extends InContext[A] {
     override val unwrap: A = r
