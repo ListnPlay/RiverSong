@@ -21,7 +21,7 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
 
   lazy val name: String = s"$host:$port"
 
-  private val httpFlow = if (secure) Http().cachedHostConnectionPoolTls[Context](host, port)
+  private val httpFlow = if (secure) Http().cachedHostConnectionPoolHttps[Context](host, port)
                                 else Http().cachedHostConnectionPool   [Context](host, port)
 
   private val flows = TrieMap[String, FlowType]()

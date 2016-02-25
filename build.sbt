@@ -9,9 +9,7 @@ resolvers ++= Seq(
 
 val log4jVersion  = "2.4.1"
 
-val akkaVersion   = "2.4.1"
-
-val streamsVersion = "2.0.2"
+val akkaVersion   = "2.4.2"
 
 val json4sVersion = "3.3.0"
 
@@ -28,18 +26,16 @@ libraryDependencies ++= Seq(
   "org.slf4j"                %  "slf4j-api"         % "1.7.12",
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
-  "com.typesafe.akka"        %% "akka-stream-experimental"          % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
-  "com.typesafe.akka"        %% "akka-http-core-experimental"       % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
-  "com.typesafe.akka"        %% "akka-http-experimental"            % streamsVersion exclude("com.typesafe.akka", "akka-actor_2.11") exclude("com.typesafe", "config"),
+  "com.typesafe.akka"        %% "akka-http-experimental" % akkaVersion exclude("com.typesafe", "config"),
   "com.fasterxml.jackson.core" % "jackson-core"        % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion,
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.4.2" exclude("com.typesafe.akka", "akka-actor") exclude("org.json4s", "json4s-core_2.11") exclude("com.typesafe", "config"),
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.5.2",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
-  "com.softwaremill.macwire" %% "proxy"             % macWireVersion,
+  "com.softwaremill.macwire" %% "proxy"             % macWireVersion exclude("org.scalatest", "calatest_2.11"),
 
   "io.dropwizard.metrics"    %  "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"    %  "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
@@ -48,14 +44,14 @@ libraryDependencies ++= Seq(
   "com.novaquark"            %  "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
   "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind"),
 
-  "org.scalatest"            %% "scalatest"         % "2.2.5" % "test",
-  "com.typesafe.akka"        %% "akka-http-testkit-experimental" % streamsVersion % "test"
+  "org.scalatest"            %% "scalatest"         % "2.2.5"     % "test",
+  "com.typesafe.akka"        %% "akka-http-testkit" % akkaVersion % "test"
 )
 
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.3.12",
+    version := "0.4.0",
     scalaVersion := "2.11.7",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),

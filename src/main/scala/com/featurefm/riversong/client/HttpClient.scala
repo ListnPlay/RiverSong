@@ -33,6 +33,6 @@ object HttpClient extends HttpClientFactory[HttpClient] with MetricImplicits {
 
   def https(host: String, port: Int = 443)(implicit system: ActorSystem) = {
     require(host.startsWith("https://") || host.indexOf("://") < 0, "Protocol must be HTTPS")
-    new HttpClient(Http().outgoingConnectionTls(host, port), host, port)
+    new HttpClient(Http().outgoingConnectionHttps(host, port), host, port)
   }
 }
