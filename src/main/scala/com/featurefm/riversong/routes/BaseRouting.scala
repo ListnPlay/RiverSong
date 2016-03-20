@@ -1,7 +1,7 @@
 package com.featurefm.riversong.routes
 
 import akka.event.Logging
-import akka.http.scaladsl.model.{HttpRequest, StatusCode, StatusCodes}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import com.featurefm.riversong.Json4sProtocol

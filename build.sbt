@@ -1,10 +1,10 @@
 import sbt.Keys._
 
 resolvers ++= Seq(
-  "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/",
-  "Sonatype repo"                at "https://oss.sonatype.org/content/groups/scala-tools/",
-  "Sonatype releases"            at "https://oss.sonatype.org/content/repositories/releases",
-  "hseeberger at bintray"        at "http://dl.bintray.com/hseeberger/maven"
+  Resolver.typesafeRepo("releases"),
+  Resolver.sonatypeRepo("releases"),
+  Resolver.bintrayRepo("hseeberger", "maven"),
+  Resolver.bintrayRepo("listnplay", "maven")
 )
 
 val log4jVersion  = "2.4.1"
@@ -15,7 +15,7 @@ val json4sVersion = "3.3.0"
 
 val macWireVersion = "2.2.2"
 
-val jacksonVersion = "2.6.3"
+val jacksonVersion = "2.7.3"
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
@@ -35,7 +35,7 @@ libraryDependencies ++= Seq(
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
-  "com.softwaremill.macwire" %% "proxy"             % macWireVersion exclude("org.scalatest", "calatest_2.11"),
+  "com.softwaremill.macwire" %% "proxy"             % macWireVersion exclude("org.scalatest", "scalatest_2.11"),
 
   "io.dropwizard.metrics"    %  "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"    %  "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
@@ -51,7 +51,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.4.0",
+    version := "0.4.1",
     scalaVersion := "2.11.7",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),

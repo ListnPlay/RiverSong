@@ -4,6 +4,9 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.stream.ActorAttributes.supervisionStrategy
+import akka.stream.Supervision.resumingDecider
+import akka.stream.{ActorAttributes, Supervision}
 import akka.stream.scaladsl._
 import com.codahale.metrics.Timer
 import com.featurefm.riversong.client.InContext.JustRequest
@@ -22,7 +25,7 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
   lazy val name: String = s"$host:$port"
 
   private val httpFlow = if (secure) Http().cachedHostConnectionPoolHttps[Context](host, port)
-                                else Http().cachedHostConnectionPool   [Context](host, port)
+                                else Http().cachedHostConnectionPool     [Context](host, port)
 
   private val flows = TrieMap[String, FlowType]()
 
@@ -30,8 +33,9 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
 
   def makeTimedFlow(name: String): FlowType = {
 
-    def attachTimerToRequest(x: RequestInContext): RequestInContext#Tuple =
+    def attachTimerToRequest(x: RequestInContext): RequestInContext#Tuple = {
       x.with_("timer", metrics.timer(name).timerContext()).toTuple
+    }
 
     def stopTimerReturnRequest(x: ResponseInContext#Tuple): ResponseInContext = {
       val y: ResponseInContext = InContext.fromTuple(x)
@@ -39,7 +43,11 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
       y //y.without("timer")
     }
 
-    Flow[InContext[HttpRequest]].map(attachTimerToRequest).via(httpFlow).map(stopTimerReturnRequest)
+    Flow[InContext[HttpRequest]].
+      withAttributes(supervisionStrategy(resumingDecider)).
+        map(attachTimerToRequest).
+          via(httpFlow).
+            map(stopTimerReturnRequest)
   }
 
   def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse] = {

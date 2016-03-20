@@ -3,18 +3,20 @@ package com.featurefm.riversong
 import akka.actor.{ActorSystem, DeadLetter, Props}
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
 import akka.http.scaladsl.server.directives._
-import akka.http.scaladsl.server.{RequestContext, Route}
+import akka.http.scaladsl.server.{Rejection, RejectionHandler, RequestContext, Route}
 import akka.stream.ActorMaterializer
+import com.featurefm.riversong.message.Message
 import com.featurefm.riversong.metrics.reporting.MetricsReportingManager
 import com.featurefm.riversong.metrics.{DeadLetterMetrics, Instrumented}
 import com.featurefm.riversong.routes.RiverSongRouting
 import nl.grons.metrics.scala.MetricName
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
+import org.omg.CosNaming.NamingContextPackage.NotFound
 
 import scala.compat.Platform
 import scala.util.{Failure, Success}
@@ -67,9 +69,32 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
       measuredRoutes
 
   private[this] lazy val measuredRoutes: Route = {
+
+    val defaultRejectionHandler = RejectionHandler.default
+    import Json4sProtocol._
+
+    def prefixEntity(entity: ResponseEntity): ResponseEntity = entity match {
+      case HttpEntity.Strict(contentType, data) =>
+        HttpEntity(ContentTypes.`application/json`, serialization.write(Message(data.utf8String)))
+      case _ =>
+        throw new IllegalStateException("Unexpected entity type")
+    }
+
+    val myRejectionHandler =
+      RejectionHandler.newBuilder()
+        .handleAll[Rejection] { rejections =>
+        mapResponseEntity(prefixEntity) {
+          defaultRejectionHandler(rejections) getOrElse complete(StatusCodes.InternalServerError)
+        }
+      }.handleNotFound {
+        mapResponseEntity(prefixEntity) {
+          defaultRejectionHandler(Nil) getOrElse complete(StatusCodes.InternalServerError)
+        }
+      }.result()
+
     val rawRoutes: Route = buildRoutes(services:_*)
 
-    { ctx: RequestContext => requestCounter.inc(); ctx } andThen rawRoutes
+    { ctx: RequestContext => requestCounter.inc(); ctx } andThen handleRejections(myRejectionHandler) { rawRoutes }
   }
 
   Http().bindAndHandle(routes, host, port) onComplete {
