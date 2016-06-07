@@ -5,8 +5,7 @@ import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.ActorAttributes.supervisionStrategy
-import akka.stream.Supervision.resumingDecider
-import akka.stream.{ActorAttributes, Supervision}
+import akka.stream.Supervision
 import akka.stream.scaladsl._
 import com.codahale.metrics.Timer
 import com.featurefm.riversong.client.InContext.JustRequest
@@ -30,6 +29,12 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
   private val flows = TrieMap[String, FlowType]()
 
   def getTimedFlow(name: String): FlowType = flows.getOrElseUpdate(name, makeTimedFlow(name))
+
+  private val resumingDecider: Supervision.Decider = { //instead of Supervision.resumingDecider
+    case e =>
+      log.error(e, "Error processing event")
+      Supervision.Resume
+  }
 
   def makeTimedFlow(name: String): FlowType = {
 

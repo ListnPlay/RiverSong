@@ -9,7 +9,7 @@ resolvers ++= Seq(
 
 val log4jVersion  = "2.5"
 
-val akkaVersion   = "2.4.6"
+val akkaVersion   = "2.4.7"
 
 val json4sVersion = "3.3.0"
 
@@ -35,7 +35,7 @@ libraryDependencies ++= Seq(
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
   "com.github.nscala-time"   %% "nscala-time"       % "2.10.0",
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.6.0",
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.7.0",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
@@ -55,8 +55,8 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.4.4",
-    scalaVersion := "2.11.7",
+    version := "0.4.5",
+    scalaVersion := "2.11.8",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
     publishMavenStyle := true,
