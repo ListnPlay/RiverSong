@@ -4,13 +4,13 @@ import akka.util.Timeout
 import com.featurefm.riversong.health._
 import com.featurefm.riversong.health.HealthState.HealthState
 import org.joda.time.DateTime
-import org.json4s.{JValue, Extraction}
+import org.json4s.{Extraction, JValue}
 import org.json4s.ext.EnumNameSerializer
 
 import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait HealthProvider extends BaseRouting {
 
@@ -20,7 +20,8 @@ trait HealthProvider extends BaseRouting {
 
   /**
    * Run the health checks and return the current system state
-   * @return a future to an instance of ``ContainerHealth``
+    *
+    * @return a future to an instance of ``ContainerHealth``
    */
   def runChecks: Future[InternalContainerHealth] = {
 
@@ -36,7 +37,12 @@ trait HealthProvider extends BaseRouting {
         checks.foreach(checkStatuses(alerts))
         // Rollup the statuses
         val overallHealth = rollupStatuses(alerts)
-        p success ContainerHealth(system.name, DateTime.now, overallHealth.state, overallHealth.details, checks)
+        val res = ContainerHealth(system.name, DateTime.now, overallHealth.state, overallHealth.details, checks)
+        p success res
+        if (res.state == HealthState.CRITICAL) {
+          import org.json4s.jackson.JsonMethods._
+          log.warning(compact(render(serialize(res))))
+        }
       case Failure(e) =>
         log.error("An error occurred while fetching the system's health", e)
         p success ContainerHealth(system.name, DateTime.now, HealthState.CRITICAL, e.getMessage)
@@ -79,11 +85,14 @@ trait HealthProvider extends BaseRouting {
 
   /**
    * Send off all of the health checks so the system can gather them
-   * @return a `Future` which contains a sequence of `HealthInfo`
+    *
+    * @return a `Future` which contains a sequence of `HealthInfo`
    */
   private def sendHealthRequests: Future[Seq[(String,HealthInfo)]] = {
 
-    val future = Future.traverse(Health(system).getChecks)(h => h.getHealth map (h.healthCheckName -> _))
+    val future = Future.traverse(Health(system).getChecks) { h =>
+      Try(h.getHealth).recover{case e => Future.failed(e)}.get map (h.healthCheckName -> _)
+    }
 
     val p = Promise[Seq[(String,HealthInfo)]]()
     future.onComplete({
@@ -96,6 +105,7 @@ trait HealthProvider extends BaseRouting {
 
     p.future
   }
+
   def serialize(health: InternalContainerHealth): JValue = {
     Extraction.decompose(health)(myFormats)
   }
