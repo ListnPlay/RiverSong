@@ -48,11 +48,11 @@ class HttpSiteClient private (secure: Boolean = false)(host: String, port: Int =
       y //y.without("timer")
     }
 
-    Flow[InContext[HttpRequest]].
-      withAttributes(supervisionStrategy(resumingDecider)).
-        map(attachTimerToRequest).
-          via(httpFlow).
-            map(stopTimerReturnRequest)
+    Flow[InContext[HttpRequest]]
+      .map(attachTimerToRequest)
+      .via(httpFlow)
+      .map(stopTimerReturnRequest)
+      .addAttributes(supervisionStrategy(resumingDecider))
   }
 
   def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse] = {
