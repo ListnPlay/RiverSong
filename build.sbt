@@ -9,7 +9,7 @@ resolvers ++= Seq(
 
 val log4jVersion  = "2.5"
 
-val akkaVersion   = "2.4.7"
+val akkaVersion   = "2.4.8"
 
 val json4sVersion = "3.3.0"
 
@@ -55,7 +55,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.4.8",
+    version := "0.5.0",
     scalaVersion := "2.11.8",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
