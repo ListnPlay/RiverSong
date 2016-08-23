@@ -6,7 +6,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.stream.ActorAttributes.supervisionStrategy
-import akka.stream.Supervision
+import akka.stream.{OverflowStrategy, Supervision}
 import akka.stream.scaladsl._
 import com.codahale.metrics.Timer
 import com.featurefm.riversong.client.InContext.JustRequest
@@ -18,7 +18,8 @@ import scala.concurrent.Future
  * Created by yardena on 1/4/16.
  */
 class HttpSiteClient private (secure: Boolean = false)
-                             (host: String, port: Int = if (secure) 443 else 80, config: Option[ConnectionPoolSettings] = None)
+                             (host: String, port: Int = if (secure) 443 else 80,
+                              config: Option[ConnectionPoolSettings] = None)
                              (implicit val system: ActorSystem) extends HttpClientInterface {
 
   protected val log = Logging(system, getClass)
@@ -71,7 +72,11 @@ class HttpSiteClient private (secure: Boolean = false)
   }
 
   def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse] = {
-    Source.single[RequestInContext](request).via(getTimedFlow(naming(request))).runWith(Sink.head).map(_.unwrap.get)
+    Source
+      .single[RequestInContext](request)
+      .via(getTimedFlow(naming(request)))
+      .map(_.unwrap.get)
+      .runWith(Sink.head)
   }
 
 }
