@@ -7,11 +7,9 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val log4jVersion  = "2.5"
-
 val akkaVersion   = "2.4.9"
 
-val json4sVersion = "3.3.0"
+val json4sVersion = "3.4.0"
 
 val macWireVersion = "2.2.2"
 
@@ -22,16 +20,17 @@ val slf4jVersion = "1.7.21"
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 libraryDependencies ++= Seq(
-  "org.apache.logging.log4j" %  "log4j-core"        % log4jVersion,
-  "org.apache.logging.log4j" %  "log4j-api"         % log4jVersion,
-  "org.apache.logging.log4j" %  "log4j-slf4j-impl"  % log4jVersion,
+  "com.getsentry.raven"      % "raven-logback"      % "7.6.0",
+  "org.codehaus.janino"      % "janino"             % "3.0.1",
+  "ch.qos.logback"           % "logback-classic"    % "1.1.7",
+  "org.logback-extensions"   % "logback-ext-loggly" % "0.1.4" exclude("ch.qos.logback", "logback-classic"),
   "org.slf4j"                %  "slf4j-api"         % slf4jVersion,
   "org.slf4j"                %  "log4j-over-slf4j"  % slf4jVersion,
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-http-experimental" % akkaVersion exclude("com.typesafe", "config"),
-    "com.fasterxml.jackson.core" % "jackson-core"        % jacksonVersion,
-  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
+  "com.fasterxml.jackson.core" % "jackson-core"          % jacksonVersion,
+  "com.fasterxml.jackson.core" % "jackson-annotations"   % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
   "com.github.nscala-time"   %% "nscala-time"       % "2.10.0",
@@ -55,7 +54,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.6.1",
+    version := "0.7.0",
     scalaVersion := "2.11.8",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
