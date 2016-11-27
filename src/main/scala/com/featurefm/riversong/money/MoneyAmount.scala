@@ -27,6 +27,10 @@ case class MoneyAmount(amount: Money, usd_amount: Money) {
 
   def == (x: MoneyAmount) = amount.isEqual(x.amount)
 
+  def min(x: MoneyAmount): MoneyAmount = if (x < this) x else this
+
+  def max(x: MoneyAmount): MoneyAmount = if (x > this) x else this
+
   def usdConversionRate: BigDecimal = amount.getAmount.divide(usd_amount.getAmount)
 
   def zero: MoneyAmount = MoneyAmount.zero(amount.getCurrencyUnit)
