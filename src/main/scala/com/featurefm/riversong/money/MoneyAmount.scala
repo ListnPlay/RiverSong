@@ -9,6 +9,8 @@ import java.math.{BigDecimal, MathContext, RoundingMode}
   */
 case class MoneyAmount(amount: Money, usd_amount: Money) {
 
+  def currency: CurrencyUnit = amount.currencyUnit
+
   def doubleAmount: Double = amount.getAmount.doubleValue()
 
   def doubleUSDAmount: Double = usd_amount.getAmount.doubleValue()
