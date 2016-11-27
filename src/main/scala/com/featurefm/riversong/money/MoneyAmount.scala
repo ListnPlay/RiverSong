@@ -35,7 +35,7 @@ case class MoneyAmount(amount: Money, usd_amount: Money) {
 
 object MoneyAmount {
   
-  val USD = "USD".toCurrency
+  val USD = org.joda.money.CurrencyUnit.USD
 
   def money(d: Double, currency: String): Money = money(d, currency.toCurrency)
 
@@ -56,5 +56,8 @@ object MoneyAmount {
     amount, amount.convertedTo(USD, new BigDecimal(usdConversionMultiplier, MathContext.UNLIMITED), RoundingMode.HALF_UP)
   )
   
-  def zero(currency: String): MoneyAmount = MoneyAmount(Money.zero(currency.toCurrency), Money.zero(USD))
+  def zero(currency: CurrencyUnit = USD): MoneyAmount = MoneyAmount(Money.zero(currency), Money.zero(USD))
+
+  def zero(currency: String): MoneyAmount = zero(currency.toCurrency)
+
 }
