@@ -29,6 +29,8 @@ case class MoneyAmount(amount: Money, usd_amount: Money) {
 
   def usdConversionRate: BigDecimal = amount.getAmount.divide(usd_amount.getAmount)
 
+  def zero: MoneyAmount = MoneyAmount.zero(amount.getCurrencyUnit)
+
   def convert(d: Double): MoneyAmount = MoneyAmount.amountWithMultiplier(d, amount.currencyUnit, usdConversionRate.doubleValue())
 
   def convertUSD(d: Double): MoneyAmount = MoneyAmount(
