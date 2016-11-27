@@ -16,20 +16,37 @@ case class MoneyAmount(amount: Money, usd_amount: Money) {
   def + (x: MoneyAmount): MoneyAmount = copy(amount + x.amount, usd_amount + x.usd_amount)
   
   def - (x: MoneyAmount): MoneyAmount = copy(amount - x.amount, usd_amount - x.usd_amount)
-  
+
+  def < (x: MoneyAmount): Boolean = amount.isLessThan(x.amount)
+
+  def > (x: MoneyAmount): Boolean = amount.isGreaterThan(x.amount)
+
+  def <= (x: MoneyAmount): Boolean = this < x || this == x
+
+  def >= (x: MoneyAmount): Boolean = this > x || this == x
+
+  def == (x: MoneyAmount) = amount.isEqual(x.amount)
+
   def usdConversionRate: BigDecimal = amount.getAmount.divide(usd_amount.getAmount)
 
+  def convert(d: Double): MoneyAmount = MoneyAmount.amountWithMultiplier(d, amount.currencyUnit, usdConversionRate.doubleValue())
+
+  def convertUSD(d: Double): MoneyAmount = MoneyAmount(
+    Money.of(amount.currencyUnit, d / usdConversionRate.doubleValue(), RoundingMode.HALF_UP),
+    MoneyAmount.usd(d)
+  )
+
   def addAmount(d: Double): MoneyAmount =
-    this + MoneyAmount.amountWithMultiplier(d, amount.currencyUnit, usdConversionRate.doubleValue())
+    this + convert(d)
 
   def subtractAmount(d: Double): MoneyAmount =
-    this - MoneyAmount.amountWithMultiplier(d, amount.currencyUnit, usdConversionRate.doubleValue())
+    this - convert(d)
 
   def addUSDAmount(d: Double): MoneyAmount =
-    this + MoneyAmount(Money.of(amount.currencyUnit, d / usdConversionRate.doubleValue(), RoundingMode.HALF_UP), MoneyAmount.usd(d))
+    this + convertUSD(d)
 
   def subtractUSDAmount(d: Double): MoneyAmount =
-    this - MoneyAmount(Money.of(amount.currencyUnit, d / usdConversionRate.doubleValue(), RoundingMode.HALF_UP), MoneyAmount.usd(d))
+    this - convertUSD(d)
 
 }
 
