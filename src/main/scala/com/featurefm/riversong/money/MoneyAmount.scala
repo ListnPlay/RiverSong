@@ -33,6 +33,8 @@ case class MoneyAmount(amount: Money, usd_amount: Money) {
 
   def max(x: MoneyAmount): MoneyAmount = if (x > this) x else this
 
+  def abs = if (doubleAmount < 0) copy(amount = amount.negated(), usd_amount = usd_amount.negated()) else this
+
   def usdConversionRate: BigDecimal = amount.getAmount.divide(usd_amount.getAmount)
 
   def zero: MoneyAmount = MoneyAmount.zero(amount.getCurrencyUnit)
