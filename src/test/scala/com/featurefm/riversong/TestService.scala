@@ -4,7 +4,8 @@ import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.http.scaladsl.server.Route
 import com.featurefm.riversong.health._
 import com.featurefm.riversong.metrics.InstrumentedActor
-import com.featurefm.riversong.routes.BaseRouting
+import com.featurefm.riversong.routes.{BaseRouting, RiverSongRouting}
+import com.softwaremill.macwire._
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -14,9 +15,9 @@ import scala.util.{Failure, Success}
  */
 object TestService extends MainService {
   override lazy val assembly = new ServiceAssembly with MyAssembly
-
-  override def services = super.services :+ assembly.ping
-
+  val wired: Wired = wiredInModule(assembly)
+  override def services = wired.lookup(classOf[RiverSongRouting])
+  wired.lookup(classOf[HealthCheck]) foreach Health().addCheck
 }
 
 trait MyAssembly extends ServiceAssembly {
@@ -25,11 +26,6 @@ trait MyAssembly extends ServiceAssembly {
   lazy val foo: FooService = timed(wire[FooService])
 
   lazy val ping: Ping = wire[Ping]
-
-  Health().addCheck(new HealthCheck {
-    override lazy val healthCheckName: String = "test"
-    override def getHealth: Future[HealthInfo] = Future successful HealthInfo(HealthState.OK, "everything is fine")
-  })
 
 }
 
@@ -44,8 +40,11 @@ class MyActor extends Actor with ActorLogging with InstrumentedActor {
 
 }
 
-class Ping(foo: FooService)(implicit val system: ActorSystem) extends BaseRouting {
+class Ping(foo: FooService)(implicit val system: ActorSystem) extends BaseRouting with HealthCheck {
   var actor = system.actorOf(Props[MyActor])
+
+  override lazy val healthCheckName: String = "test"
+  override def getHealth: Future[HealthInfo] = Future successful HealthInfo(HealthState.OK, "everything is fine")
 
   override def routes: Route = {
     path("ping") {
@@ -65,6 +64,16 @@ class Ping(foo: FooService)(implicit val system: ActorSystem) extends BaseRoutin
       onComplete(foo.testMe("World")) {
         case Success(s) => complete(s)
         case Failure(e) => complete("Error")
+      }
+    } ~
+    path("sleepy") {
+      import scala.concurrent.duration._
+      import akka.pattern.after
+
+      onComplete(
+        after(1.second, using = system.scheduler){Future successful "zzz-zzz-zzz"}
+      ) {
+        complete(_)
       }
     }
   }

@@ -4,15 +4,16 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.http.scaladsl.model.StatusCodes.{OK, BadRequest}
+import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.scaladsl.{Keep, Sink, Source, Flow}
-import com.featurefm.riversong.health.{HealthState, HealthInfo, HealthCheck}
-import com.featurefm.riversong.{Json4sProtocol, Configurable}
+import akka.pattern.CircuitBreaker
+import akka.stream.scaladsl.{Sink, Source}
+import com.featurefm.riversong.health.{HealthCheck, HealthInfo, HealthState}
+import com.featurefm.riversong.{Configurable, Json4sProtocol}
 import com.featurefm.riversong.message.Message
 
 import scala.concurrent.Future
-import scala.util.{Try, Success, Failure}
+import scala.concurrent.duration._
 
 /**
  * Created by yardena on 11/8/15.
@@ -62,6 +63,23 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
     HealthInfo(HealthState.OK, "")
   } recover { case e =>
     HealthInfo(if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED, s"http://$host:$port ~> ${e.getMessage}")
+  }
+
+  val breaker =
+    new CircuitBreaker(
+      system.scheduler,
+      maxFailures = config.getInt("services.max-failures"),
+      callTimeout = config.getInt("services.call-timeout-ms").milliseconds, //2.seconds
+      resetTimeout = config.getInt("services.reset-timeout-seconds").seconds //30.seconds
+    ).onOpen {
+      http.shutdown()
+      ()
+    }
+
+  val interval = config.getInt("services.health-check-interval-seconds").seconds //30.seconds
+
+  system.scheduler.schedule(interval, interval) {
+    breaker.withCircuitBreaker(getHealth)
   }
 
 }

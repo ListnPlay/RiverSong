@@ -1,5 +1,6 @@
 package com.featurefm.riversong.client
 
+import akka.Done
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
@@ -42,12 +43,17 @@ class HttpSiteClient private (secure: Boolean = false)
     }
   }
 
+  private val pool = Source.empty.viaMat(httpFlow)(Keep.right).to(Sink.head).run()
+
+  def shutdown(): Future[Done] =
+    pool.shutdown()
+
   private val flows = TrieMap[String, FlowType]()
 
   def getTimedFlow(name: String): FlowType = flows.getOrElseUpdate(name, makeTimedFlow(name))
 
   private val resumingDecider: Supervision.Decider = { //instead of Supervision.resumingDecider
-    case e =>
+    e =>
       log.error(e, "Error processing event")
       Supervision.Resume
   }
