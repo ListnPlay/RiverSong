@@ -56,11 +56,10 @@ class ServiceClientTest(implicit val system: ActorSystem) extends ServiceClient 
   override val serviceName = "test"
 
   override lazy val config: Config = CoreConfig.getConfig(Some(ConfigFactory.load("test.conf")))
-  override lazy val healthCheckName: String = "test"
-  override lazy val host = config.getString("services.test.host")
-  override lazy val port = config.getInt("services.test.port")
 
   override def isServiceCritical: Boolean = true
+
+  startSelfHealthWatch()
 
   def callSleepy = http.send(Get("/sleepy")) flatMap { response =>
     response.status match {

@@ -65,21 +65,23 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
     HealthInfo(if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED, s"http://$host:$port ~> ${e.getMessage}")
   }
 
-  val breaker =
-    new CircuitBreaker(
-      system.scheduler,
-      maxFailures = config.getInt("services.max-failures"),
-      callTimeout = config.getInt("services.call-timeout-ms").milliseconds, //2.seconds
-      resetTimeout = config.getInt("services.reset-timeout-seconds").seconds //30.seconds
-    ).onOpen {
-      http.shutdown()
-      ()
+  def startSelfHealthWatch(): Unit = {
+    val breaker =
+      new CircuitBreaker(
+        system.scheduler,
+        maxFailures = config.getInt("services.max-failures"),
+        callTimeout = config.getInt("services.call-timeout-ms").milliseconds, //2.seconds
+        resetTimeout = config.getInt("services.reset-timeout-seconds").seconds //30.seconds
+      ).onOpen {
+        http.shutdown()
+        ()
+      }
+
+    val interval = config.getInt("services.health-check-interval-seconds").seconds //30.seconds
+
+    system.scheduler.schedule(interval, interval) {
+      breaker.withCircuitBreaker(getHealth)
     }
-
-  val interval = config.getInt("services.health-check-interval-seconds").seconds //30.seconds
-
-  system.scheduler.schedule(interval, interval) {
-    breaker.withCircuitBreaker(getHealth)
   }
 
 }
