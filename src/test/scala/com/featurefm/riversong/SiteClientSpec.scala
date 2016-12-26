@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.model.StatusCode
 import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
-import com.featurefm.riversong.client.{HttpClient, HttpSiteClient}
+import com.featurefm.riversong.client.{HttpClient, HttpSiteClient, MetricImplicits}
 import com.featurefm.riversong.metrics.reporting.Slf4jReporter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -29,15 +29,24 @@ class SiteClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTimeout
 //  val url2 = "/status"
 
   "SiteClient" should "be able to connect to google.com" in {
-    val f = client1.send(Get(url1))
     var x: StatusCode = null
-    whenReady(f) { result =>
-      x = result.status// shouldBe OK
+
+    {
+      import client1.MethodAndPathNamedRequest
+      val f = client1.send(Get(url1))
+      whenReady(f) { result =>
+        x = result.status// shouldBe OK
+      }
     }
-    val f2 = oldClient1.send(Get(url1))
-    whenReady(f2) { result =>
-      result.status shouldBe x
+
+    {
+      import oldClient1.MethodAndPathNamedRequest
+      val f2 = oldClient1.send(Get(url1))
+      whenReady(f2) { result =>
+        result.status shouldBe x
+      }
     }
+
   }
 
 //  it should "be able to connect to localhost" in {

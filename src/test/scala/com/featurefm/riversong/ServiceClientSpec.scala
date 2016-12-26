@@ -61,6 +61,8 @@ class ServiceClientTest(implicit val system: ActorSystem) extends ServiceClient 
 
   startSelfHealthWatch()
 
+  import http.MethodAndPathNamedRequest
+
   def callSleepy = http.send(Get("/sleepy")) flatMap { response =>
     response.status match {
       case OK => Unmarshal(response.entity).to[String]

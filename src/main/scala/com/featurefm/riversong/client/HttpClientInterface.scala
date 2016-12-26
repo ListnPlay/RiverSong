@@ -12,7 +12,7 @@ import scala.concurrent.Future
 /**
   * Created by yardena on 1/6/16.
   */
-trait HttpClientInterface extends Json4sProtocol with Instrumented {
+trait HttpClientInterface extends Json4sProtocol with Instrumented with MetricImplicits {
 
   implicit val system: ActorSystem
   implicit val materializer = ActorMaterializer()
@@ -22,8 +22,8 @@ trait HttpClientInterface extends Json4sProtocol with Instrumented {
 
   override lazy val metricBaseName: MetricName = MetricName(this.getClass.getSimpleName, name)
 
-  def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse]
-  def send(request: HttpRequest, requestName: String): Future[HttpResponse] = send(request)(HttpSiteClient.FixedNaming(requestName))
+  def send(request: HttpRequest)(implicit naming: NamedHttpRequest): Future[HttpResponse]
+  def send(request: HttpRequest, requestName: String): Future[HttpResponse] = send(request)(FixedNaming(requestName))
 
 }
 

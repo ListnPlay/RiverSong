@@ -1,6 +1,6 @@
 package com.featurefm.riversong.client
 
-import akka.Done
+import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
@@ -10,10 +10,8 @@ import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.{OverflowStrategy, Supervision}
 import akka.stream.scaladsl._
 import com.codahale.metrics.Timer
-import com.featurefm.riversong.client.InContext.JustRequest
 
-import scala.collection.concurrent.TrieMap
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
 /**
  * Created by yardena on 1/4/16.
@@ -27,7 +25,7 @@ class HttpSiteClient private (secure: Boolean = false)
 
   lazy val name: String = s"$host:$port"
 
-  private val httpFlow = if (secure) {
+  val httpFlow = if (secure) {
     config match {
       case Some(settings) =>
         Http().cachedHostConnectionPoolHttps[Context](host, port, settings = settings)
@@ -43,46 +41,48 @@ class HttpSiteClient private (secure: Boolean = false)
     }
   }
 
-  private val pool = Source.empty.viaMat(httpFlow)(Keep.right).to(Sink.head).run()
+  val pool = Source.empty.viaMat(httpFlow)(Keep.right).to(Sink.head).run()
 
   def shutdown(): Future[Done] =
     pool.shutdown()
 
-  private val flows = TrieMap[String, FlowType]()
-
-  def getTimedFlow(name: String): FlowType = flows.getOrElseUpdate(name, makeTimedFlow(name))
-
-  private val resumingDecider: Supervision.Decider = { //instead of Supervision.resumingDecider
+  def decider: Supervision.Decider = { //instead of Supervision.resumingDecider
     e =>
       log.error(e, "Error processing event")
       Supervision.Resume
   }
 
-  def makeTimedFlow(name: String): FlowType = {
-
-    def attachTimerToRequest(x: RequestInContext): RequestInContext#Tuple = {
+  val timedFlow: FlowType = Flow[InContext[HttpRequest]]
+    .map { x =>
+      val naming = implicitly[NamedHttpRequest]
+      val name = x.context.getOrElse("name", naming(x.unwrap)).toString
       x.with_("timer", metrics.timer(name).timerContext()).toTuple
     }
-
-    def stopTimerReturnRequest(x: ResponseInContext#Tuple): ResponseInContext = {
+    .via(httpFlow)
+    .map { x =>
       val y: ResponseInContext = InContext.fromTuple(x)
       y.get[Timer.Context]("timer").stop()
-      y //y.without("timer")
+      y
     }
+    .addAttributes(supervisionStrategy(decider))
 
-    Flow[InContext[HttpRequest]]
-      .map(attachTimerToRequest)
-      .via(httpFlow)
-      .map(stopTimerReturnRequest)
-      .addAttributes(supervisionStrategy(resumingDecider))
-  }
+  def getTimedFlow(name: String): FlowType =
+    Flow.fromFunction((r: InContext[HttpRequest]) => r.with_("name", name)).via(timedFlow)
 
-  def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse] = {
-    Source
-      .single[RequestInContext](request)
-      .via(getTimedFlow(naming(request)))
-      .map(_.unwrap.get)
-      .runWith(Sink.head)
+  private val channel = Source
+    .actorRef[InContext[HttpRequest]](10000, OverflowStrategy.dropNew)
+    .via(timedFlow)
+    .map { x =>
+      x.get[Promise[HttpResponse]]("promise").complete(x.unwrap)
+      x
+    }
+    .to(Sink.ignore)
+    .run
+
+  def send(request: HttpRequest)(implicit naming: NamedHttpRequest): Future[HttpResponse] = {
+    val p = Promise[HttpResponse]()
+    channel ! InContext.wrap(request).with_("promise", p).with_("name", naming(request))
+    p.future
   }
 
 }

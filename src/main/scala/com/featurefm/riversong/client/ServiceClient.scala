@@ -80,7 +80,7 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
     val interval = config.getInt("services.health-check-interval-seconds").seconds //30.seconds
 
     system.scheduler.schedule(interval, interval) {
-      breaker.withCircuitBreaker(getHealth)
+      breaker.withCircuitBreaker(getHealth.filter(_.state != HealthState.CRITICAL))
     }
   }
 

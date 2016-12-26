@@ -18,7 +18,7 @@ class HttpClient private (flow: => Flow[HttpRequest, HttpResponse, Any], host: S
 
   lazy val name: String = s"$host:$port"
 
-  def send(request: HttpRequest)(implicit naming: HttpSiteClient.NamedHttpRequest): Future[HttpResponse] = {
+  def send(request: HttpRequest)(implicit naming: NamedHttpRequest): Future[HttpResponse] = {
     Source.single(request).via(flow).runWith(Sink.head)
   }
 
