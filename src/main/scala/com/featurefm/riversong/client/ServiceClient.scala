@@ -3,7 +3,7 @@ package com.featurefm.riversong.client
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCode}
 import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern.CircuitBreaker
@@ -52,15 +52,12 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
           case e => throw new RuntimeException(s"$serviceName-manager returned an error '${response.status.value}'")
         }
 
-  lazy val statusFlow = Source.single[InContext[HttpRequest]](Get("/status"))
-                          .via(http.getTimedFlow("status"))
-                          .map(_.unwrap.map(_.status))
-//                          .toMat(Sink.head)(Keep.right)
+  def status: Future[StatusCode] = http.send(Get("/status")) map {x => x.discardEntityBytes(); x.status }
 
-  def status: Future[Boolean] = statusFlow.runWith(Sink.head) map (_.get == OK)
-
-  override def getHealth: Future[HealthInfo] = status map { res =>
-    HealthInfo(HealthState.OK, "")
+  override def getHealth: Future[HealthInfo] = status map {
+    case code if code.isSuccess() => HealthInfo(HealthState.OK, s"http://$host:$port ~> $code")
+    case code =>
+      HealthInfo(if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED, s"http://$host:$port ~> $code")
   } recover { case e =>
     HealthInfo(if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED, s"http://$host:$port ~> ${e.getMessage}")
   }
