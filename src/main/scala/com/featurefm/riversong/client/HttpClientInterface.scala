@@ -1,8 +1,11 @@
 package com.featurefm.riversong.client
 
+import java.util.concurrent.TimeoutException
+
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{HttpResponse, HttpRequest}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
 import nl.grons.metrics.scala.MetricName
@@ -24,6 +27,12 @@ trait HttpClientInterface extends Json4sProtocol with Instrumented with MetricIm
 
   def send(request: HttpRequest)(implicit naming: NamedHttpRequest): Future[HttpResponse]
   def send(request: HttpRequest, requestName: String): Future[HttpResponse] = send(request)(FixedNaming(requestName))
+
+  import akka.pattern.after
+  def send(request: HttpRequest, timeout: Timeout, requestName: Option[String] = None): Future[HttpResponse] = Future.firstCompletedOf(List(
+    send(request, requestName.getOrElse(MethodAndPathNamedRequest(request))),
+    after(timeout.duration, using = system.scheduler)(Future failed new TimeoutException(s"Request ${requestName.getOrElse(MethodAndPathNamedRequest(request))} to service $name has timed out after ${timeout.duration.toString()}"))
+  ))
 
 }
 

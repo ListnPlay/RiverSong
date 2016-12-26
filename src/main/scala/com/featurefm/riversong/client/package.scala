@@ -15,5 +15,6 @@ package object client {
   type ResponseInContext = InContext[Try[HttpResponse]]
   type FlowType = Flow[RequestInContext, ResponseInContext, Any]
 
+  trait NamedHttpRequest extends ((HttpRequest) => String)
 
 }

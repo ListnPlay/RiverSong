@@ -66,11 +66,12 @@ class HttpSiteClient private (secure: Boolean = false)
     }
     .addAttributes(supervisionStrategy(decider))
 
+  @deprecated(message = "use timedFlow directly or send(HttpRequest,String)", since = "0.8.3/0.7.5")
   def getTimedFlow(name: String): FlowType =
     Flow.fromFunction((r: InContext[HttpRequest]) => r.with_("name", name)).via(timedFlow)
 
   private val channel = Source
-    .actorRef[InContext[HttpRequest]](10000, OverflowStrategy.dropNew)
+    .actorRef[InContext[HttpRequest]](10000, OverflowStrategy.dropNew) //todo make buffer size configurable
     .via(timedFlow)
     .map { x =>
       x.get[Promise[HttpResponse]]("promise").complete(x.unwrap)

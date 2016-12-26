@@ -52,6 +52,8 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
           case e => throw new RuntimeException(s"$serviceName-manager returned an error '${response.status.value}'")
         }
 
+  import MetricImplicits._
+
   def status: Future[StatusCode] = http.send(Get("/status")) map {x => x.discardEntityBytes(); x.status }
 
   override def getHealth: Future[HealthInfo] = status map {

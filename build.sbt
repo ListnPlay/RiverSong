@@ -21,6 +21,8 @@ val slf4jVersion    = "1.7.21"
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
+scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
+
 libraryDependencies ++= Seq(
   "com.getsentry.raven"      % "raven-logback"      % "7.6.0",
   "org.codehaus.janino"      % "janino"             % "3.0.1",
