@@ -16,7 +16,6 @@ import com.featurefm.riversong.routes.RiverSongRouting
 import nl.grons.metrics.scala.MetricName
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
-import org.omg.CosNaming.NamingContextPackage.NotFound
 
 import scala.compat.Platform
 import scala.util.{Failure, Success}
@@ -50,6 +49,8 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
     val beginning = Platform.currentTime
 
     {
+      case Complete(res) if req.method == HttpMethods.GET && req.uri.path.toString() == "/status" &&  res.status.isSuccess() =>
+        None
       case Complete(res) =>
         val duration = new Period(Platform.currentTime - beginning)
         Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${res.status} [${duration.toString(F1)}]", Logging.InfoLevel))
@@ -83,14 +84,14 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
     val myRejectionHandler =
       RejectionHandler.newBuilder()
         .handleAll[Rejection] { rejections =>
-        mapResponseEntity(prefixEntity) {
-          defaultRejectionHandler(rejections) getOrElse complete(StatusCodes.InternalServerError)
-        }
-      }.handleNotFound {
-        mapResponseEntity(prefixEntity) {
-          defaultRejectionHandler(Nil) getOrElse complete(StatusCodes.InternalServerError)
-        }
-      }.result()
+          mapResponseEntity(prefixEntity) {
+            defaultRejectionHandler(rejections) getOrElse complete(StatusCodes.InternalServerError)
+          }
+        }.handleNotFound {
+          mapResponseEntity(prefixEntity) {
+            defaultRejectionHandler(Nil) getOrElse complete(StatusCodes.InternalServerError)
+          }
+        }.result()
 
     val rawRoutes: Route = buildRoutes(services:_*)
 
