@@ -38,30 +38,34 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
   implicit lazy val executor = http.executor
   implicit lazy val materializer = http.materializer
 
-  def failWith(response: HttpResponse): Future[Nothing] =
-      if (response.status == BadRequest)
-        Unmarshal(response.entity).to[Message] map {
-          m: Message => throw new IllegalArgumentException(m.message)
-        } recover {
-          case e => throw new IllegalArgumentException(s"$serviceName-manager returned an error '${response.status.value}'")
-        }
-      else
-        Unmarshal(response.entity).to[Message] map {
-          m: Message => throw new RuntimeException(m.message)
-        } recover {
-          case e => throw new RuntimeException(s"$serviceName-manager returned an error '${response.status.value}'")
-        }
+  def statusToException(code: StatusCode): (String) => Exception = msg => code match {
+    case BadRequest => new IllegalArgumentException(msg)
+    case _ => new RuntimeException(msg)
+  }
+
+  def failWith(response: HttpResponse): Future[Nothing] = {
+    val createError = statusToException(response.status)
+    Unmarshal(response.entity).to[Message] transform (
+      { m => throw createError(m.message)},
+      { e =>
+        response.discardEntityBytes()
+        createError(s"$serviceName-manager returned an error '${response.status.value}'")
+      }
+    )
+  }
 
   import MetricImplicits._
 
   def status: Future[StatusCode] = http.send(Get("/status")) map {x => x.discardEntityBytes(); x.status }
 
+  private def isDown = if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED
+
   override def getHealth: Future[HealthInfo] = status map {
     case code if code.isSuccess() => HealthInfo(HealthState.OK, s"http://$host:$port ~> $code")
     case code =>
-      HealthInfo(if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED, s"http://$host:$port ~> $code")
+      HealthInfo(isDown, s"http://$host:$port ~> $code")
   } recover { case e =>
-    HealthInfo(if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED, s"http://$host:$port ~> ${e.getMessage}")
+    HealthInfo(isDown, s"http://$host:$port ~> UNREACHABLE", Some(e.getMessage))
   }
 
   def startSelfHealthWatch(): Unit = {

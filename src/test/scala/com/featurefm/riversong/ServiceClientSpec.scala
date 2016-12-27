@@ -26,7 +26,9 @@ class ServiceClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTime
   lazy val client = new ServiceClientTest()
 
   classOf[ServiceClient].getSimpleName should "call sleepy once" in {
-    whenReady (client.callSleepy) { println }
+    whenReady (client.callSleepy) { res =>
+      res shouldBe "zzz-zzz-zzz"
+    }
   }
 
 /*
