@@ -7,9 +7,7 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val akkaVersion     = "2.4.16"
-
-val akkaHttpVersion = "10.0.1"
+val akkaVersion     = "2.4.11"
 
 val json4sVersion   = "3.5.0"
 
@@ -32,7 +30,7 @@ libraryDependencies ++= Seq(
   "org.slf4j"                %  "log4j-over-slf4j"  % slf4jVersion,
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
-  "com.typesafe.akka"        %% "akka-http"         % akkaHttpVersion exclude("com.typesafe", "config"),
+  "com.typesafe.akka"        %% "akka-http-experimental" % akkaVersion exclude("com.typesafe", "config"),
   "com.fasterxml.jackson.core" % "jackson-core"     % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
@@ -53,13 +51,13 @@ libraryDependencies ++= Seq(
   "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind"),
 
   "org.scalatest"            %% "scalatest"         % "2.2.5"         % "test",
-  "com.typesafe.akka"        %% "akka-http-testkit" % akkaHttpVersion % "test"
+  "com.typesafe.akka"        %% "akka-http-testkit" % akkaVersion % "test"
 )
 
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.8.3-SNAPSHOT",
+    version := "0.7.5-SNAPSHOT",
     scalaVersion := "2.11.8",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
