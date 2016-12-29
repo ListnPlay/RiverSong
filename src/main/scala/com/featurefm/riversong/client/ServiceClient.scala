@@ -77,7 +77,6 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
         resetTimeout = config.getInt("services.reset-timeout-seconds").seconds //30.seconds
       ).onOpen {
         http.shutdown()
-        ()
       }
 
     val interval = config.getInt("services.health-check-interval-seconds").seconds //30.seconds

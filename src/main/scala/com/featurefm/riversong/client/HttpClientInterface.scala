@@ -11,6 +11,7 @@ import com.featurefm.riversong.metrics.Instrumented
 import nl.grons.metrics.scala.MetricName
 
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
   * Created by yardena on 1/6/16.
@@ -33,6 +34,10 @@ trait HttpClientInterface extends Json4sProtocol with Instrumented with MetricIm
     send(request, requestName.getOrElse(MethodAndPathNamedRequest(request))),
     after(timeout.duration, using = system.scheduler)(Future failed new TimeoutException(s"Request ${requestName.getOrElse(MethodAndPathNamedRequest(request))} to service $name has timed out after ${timeout.duration.toString()}"))
   ))
+
+  def parse[T](f: HttpResponse => Future[T])(response: HttpResponse): Future[T] = f(response) andThen {
+    case _ => Try(response.discardEntityBytes())
+  }
 
 }
 
