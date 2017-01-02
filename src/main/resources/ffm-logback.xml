@@ -1,0 +1,47 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{"ISO8601", UTC} %-5level [%p] [%t] %c{0}.%M - %m%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="loggly" class="ch.qos.logback.ext.loggly.LogglyAppender">
+        <endpointUrl>${LOGGLY_URL:-https://logs-01.loggly.com/inputs/00620f06-3757-4592-8ba8-702a36b9aca8@41058}/tag/${MARATHON_APP_ID},${HOSTNAME},${HOST}</endpointUrl>
+        <pattern>%d{"ISO8601", UTC}  %p %t %c{0}.%M - %m%n</pattern>
+    </appender>
+    <appender name="Sentry" class="com.getsentry.raven.logback.SentryAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <dsn>${SENTRY_URL:-https://54b475227430444ba82fcccfa8497ac8:b21af5521971431bad11cd32455080d9@sentry.io/96653}</dsn>
+        <tags>APP:${MARATHON_APP_ID},HOSTNAME:${HOSTNAME},HOST:${HOST}</tags>
+    </appender>
+    <root level="info">
+        <if condition='isDefined("LOGBACK_APPENDERS")'>
+            <then>
+                <if condition='property("LOGBACK_APPENDERS").contains("stdout")'>
+                    <then>
+                        <appender-ref ref="STDOUT"/>
+                    </then>
+                </if>
+                <if condition='property("LOGBACK_APPENDERS").contains("loggly")'>
+                    <then>
+                        <appender-ref ref="loggly"/>
+                    </then>
+                </if>
+                <if condition='property("LOGBACK_APPENDERS").contains("sentry")'>
+                    <then>
+                        <appender-ref ref="Sentry"/>
+                    </then>
+                </if>
+                <if condition='property("LOGBACK_APPENDERS").equals("")'>
+                    <then>
+                        <appender-ref ref="STDOUT"/>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <appender-ref ref="STDOUT"/>
+            </else>
+        </if>
+    </root>
+</configuration>
