@@ -7,7 +7,9 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val akkaVersion     = "2.4.11"
+val akkaVersion     = "2.4.16"
+
+val akkaHttpVersion = "10.0.3"
 
 val json4sVersion   = "3.5.0"
 
@@ -30,14 +32,14 @@ libraryDependencies ++= Seq(
   "org.slf4j"                %  "log4j-over-slf4j"  % slf4jVersion,
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
-  "com.typesafe.akka"        %% "akka-http-experimental" % akkaVersion exclude("com.typesafe", "config"),
+  "com.typesafe.akka"        %% "akka-http"         % akkaHttpVersion exclude("com.typesafe", "config"),
   "com.fasterxml.jackson.core" % "jackson-core"     % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
   "com.github.nscala-time"   %% "nscala-time"       % "2.10.0",
   "com.github.nscala-money"  %% "nscala-money"      % "0.11.0",
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.9.0",
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.12.0",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
@@ -51,7 +53,7 @@ libraryDependencies ++= Seq(
   "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind"),
 
   "org.scalatest"            %% "scalatest"         % "2.2.5"         % "test",
-  "com.typesafe.akka"        %% "akka-http-testkit" % akkaVersion % "test"
+  "com.typesafe.akka"        %% "akka-http-testkit" % akkaHttpVersion % "test"
 )
 
 lazy val root = (sbt.project in file(".")).settings(
