@@ -9,10 +9,12 @@ import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
 import akka.http.scaladsl.server.directives._
 import akka.http.scaladsl.server.{Rejection, RejectionHandler, RequestContext, Route}
 import akka.stream.ActorMaterializer
+import com.featurefm.riversong.health.{Health, HealthCheck, HealthMonitorActor}
 import com.featurefm.riversong.message.Message
 import com.featurefm.riversong.metrics.reporting.MetricsReportingManager
 import com.featurefm.riversong.metrics.{DeadLetterMetrics, Instrumented}
 import com.featurefm.riversong.routes.RiverSongRouting
+import com.softwaremill.macwire.Wired
 import nl.grons.metrics.scala.MetricName
 import org.joda.time.Period
 import org.joda.time.format.PeriodFormatterBuilder
@@ -112,5 +114,11 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
   system.actorOf(MetricsReportingManager.props())
 
   system.eventStream.subscribe(system.actorOf(Props(classOf[DeadLetterMetrics]),"dead-letters-metric"), classOf[DeadLetter])
+
+  def registerHealthChecks(wired: Wired): Unit = {
+    val healthChecks = wired.lookup(classOf[HealthCheck])
+    healthChecks foreach Health().addCheck
+    system.actorOf(Props(classOf[HealthMonitorActor], healthChecks), "health-monitor")
+  }
 
 }

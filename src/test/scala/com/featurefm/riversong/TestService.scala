@@ -17,7 +17,7 @@ object TestService extends MainService {
   override lazy val assembly = new ServiceAssembly with MyAssembly
   val wired: Wired = wiredInModule(assembly)
   override def services = wired.lookup(classOf[RiverSongRouting])
-  wired.lookup(classOf[HealthCheck]) foreach Health().addCheck
+  registerHealthChecks(wired)
 }
 
 trait MyAssembly extends ServiceAssembly {

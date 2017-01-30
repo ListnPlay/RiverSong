@@ -8,6 +8,7 @@ import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern.CircuitBreaker
 import akka.stream.scaladsl.{Sink, Source}
+import akka.util.Timeout
 import com.featurefm.riversong.health.{HealthCheck, HealthInfo, HealthState}
 import com.featurefm.riversong.{Configurable, Json4sProtocol}
 import com.featurefm.riversong.message.Message
@@ -54,9 +55,12 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
     )
   }
 
-  import MetricImplicits._
+  val healthCallTimeout = config.getInt("services.call-timeout-ms").milliseconds  //2.seconds
 
-  def status: Future[StatusCode] = http.send(Get("/status")) map {x => x.discardEntityBytes(); x.status }
+  def status: Future[StatusCode] = http.send(Get("/status"), Timeout(healthCallTimeout)) map { x =>
+    x.discardEntityBytes()
+    x.status
+  }
 
   private def isDown = if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED
 
@@ -73,7 +77,7 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
       new CircuitBreaker(
         system.scheduler,
         maxFailures = config.getInt("services.max-failures"),
-        callTimeout = config.getInt("services.call-timeout-ms").milliseconds, //2.seconds
+        callTimeout = healthCallTimeout,
         resetTimeout = config.getInt("services.reset-timeout-seconds").seconds //30.seconds
       ).onOpen {
         http.shutdown()
