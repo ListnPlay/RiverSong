@@ -7,9 +7,9 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val akkaVersion     = "2.4.16"
+val akkaVersion     = "2.4.17"
 
-val akkaHttpVersion = "10.0.3"
+val akkaHttpVersion = "10.0.4"
 
 val json4sVersion   = "3.5.0"
 
@@ -59,7 +59,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.8.3-SNAPSHOT",
+    version := "0.8.3",
     scalaVersion := "2.11.8",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
