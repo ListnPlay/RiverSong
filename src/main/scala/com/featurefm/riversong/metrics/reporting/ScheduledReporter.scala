@@ -14,8 +14,8 @@ abstract class ScheduledReporter {
   implicit val config: Config
   val metrics = Metrics(system)
   val host = getHostInternal
-  val application = "ArtistManager"
-  val version = "1.0"
+  val application = "RiverSong" //todo retrieve using sbt properties
+  val version = "1.0" //todo retrieve using sbt properties
 
   private[reporting] var schedule: Option[Cancellable] = None
 
