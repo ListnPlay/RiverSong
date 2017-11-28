@@ -20,11 +20,9 @@ val jacksonVersion  = "2.8.5"
 
 val slf4jVersion    = "1.7.21"
 
-ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
-
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
-dependencyOverrides ++= Set(
+dependencyOverrides ++= Seq(
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-actor" % akkaVersion
 )
@@ -66,7 +64,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.9.0",
+    version := "0.9.1-SNAPSHOT",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
