@@ -3,17 +3,18 @@ package com.featurefm.riversong.client
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCode}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, ResponseEntity, StatusCode}
 import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
 import akka.pattern.CircuitBreaker
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
 import com.featurefm.riversong.health.{HealthCheck, HealthInfo, HealthState}
 import com.featurefm.riversong.{Configurable, Json4sProtocol}
 import com.featurefm.riversong.message.Message
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 /**
@@ -43,6 +44,13 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
     case BadRequest => new IllegalArgumentException(msg)
     case _ => new RuntimeException(msg)
   }
+
+  def send(request: HttpRequest, timeout: FiniteDuration, requestName: Option[String] = None): Future[HttpResponse] =
+    http.send(request, Timeout(timeout), requestName)
+
+  def readAs[T](response: ResponseEntity)
+               (implicit um: Unmarshaller[ResponseEntity, T], ec: ExecutionContext = null, mat: Materializer): Future[T] =
+    http.readAs[T](response)
 
   def failWith(response: HttpResponse): Future[Nothing] = {
     val createError = statusToException(response.status)

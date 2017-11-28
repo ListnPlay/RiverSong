@@ -3,14 +3,15 @@ package com.featurefm.riversong.client
 import java.util.concurrent.TimeoutException
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.stream.ActorMaterializer
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, ResponseEntity}
+import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
 import nl.grons.metrics.scala.MetricName
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -38,6 +39,13 @@ trait HttpClientInterface extends Json4sProtocol with Instrumented with MetricIm
   def parse[T](f: HttpResponse => Future[T])(response: HttpResponse): Future[T] = f(response) andThen {
     case _ => Try(response.discardEntityBytes())
   }
+
+  def readAs[T](response: ResponseEntity)(implicit um: Unmarshaller[ResponseEntity, T], ec: ExecutionContext = null, mat: Materializer): Future[T] = Unmarshal(response).to[T] andThen {
+    case _ => Try(response.discardBytes())
+  }
+//  def safeParse[T](response: ResponseEntity)(f: ResponseEntity => Future[T]): Future[T] = f(response) andThen {
+//    case _ => Try(response.discardBytes())
+//  }
 
 }
 

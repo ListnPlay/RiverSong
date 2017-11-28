@@ -4,7 +4,6 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import com.github.jjagged.metrics.reporting.statsd.StatsD
 import com.typesafe.config.Config
 
 /**
@@ -15,7 +14,6 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
   val log = Logging(system, getClass)
 
   private lazy val reporter = getReporter
-  private lazy val statsD = getStatsD
 
   private val statsdHost = config.getString("host")
   private val port = config.getInt("port")
@@ -26,9 +24,7 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
    */
   override def stop(): Unit = {
     super.stop()
-    if (statsD != null) {
-      statsD.close()
-    }
+    reporter.stop()
   }
 
   /**
@@ -44,20 +40,16 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
       metrics.metricRegistry.getTimers)
   }
 
-  private[reporting] def getReporter: com.github.jjagged.metrics.reporting.StatsDReporter = {
+  private[reporting] def getReporter: com.readytalk.metrics.StatsDReporter = {
 
     log.info("Initializing the StatsD metrics reporter")
 
-    com.github.jjagged.metrics.reporting.StatsDReporter.forRegistry(metrics.metricRegistry)
+    com.readytalk.metrics.StatsDReporter.forRegistry(metrics.metricRegistry)
       .prefixedWith(this.prefix)
-      .withTags("{'host':'" + host + "', 'application':'" + application.replace(' ', '-').toLowerCase + "'}")
       .convertDurationsTo(TimeUnit.MILLISECONDS)
       .convertRatesTo(TimeUnit.SECONDS)
-      .build(statsD)
+      .build(statsdHost, port)
 
   }
 
-  private[reporting] def getStatsD: StatsD = {
-    new StatsD(statsdHost, port)
-  }
 }

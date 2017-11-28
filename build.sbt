@@ -4,14 +4,15 @@ resolvers ++= Seq(
   Resolver.typesafeRepo("releases"),
   Resolver.sonatypeRepo("releases"),
   Resolver.bintrayRepo("hseeberger", "maven"),
+  Resolver.bintrayRepo("readytalk", "maven"),
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val akkaVersion     = "2.4.17"
+val akkaVersion     = "2.5.6"
 
-val akkaHttpVersion = "10.0.4"
+val akkaHttpVersion = "10.0.10"
 
-val json4sVersion   = "3.5.0"
+val json4sVersion   = "3.5.3"
 
 val macWireVersion  = "2.2.2"
 
@@ -23,6 +24,11 @@ ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
+dependencyOverrides ++= Set(
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+  "com.typesafe.akka" %% "akka-actor" % akkaVersion
+)
+
 libraryDependencies ++= Seq(
   "com.getsentry.raven"      % "raven-logback"      % "7.6.0",
   "org.codehaus.janino"      % "janino"             % "3.0.1",
@@ -31,6 +37,7 @@ libraryDependencies ++= Seq(
   "org.slf4j"                %  "slf4j-api"         % slf4jVersion,
   "org.slf4j"                %  "log4j-over-slf4j"  % slf4jVersion,
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
+  "com.typesafe.akka"        %% "akka-stream"       % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-http"         % akkaHttpVersion exclude("com.typesafe", "config"),
   "com.fasterxml.jackson.core" % "jackson-core"     % jacksonVersion,
@@ -39,7 +46,7 @@ libraryDependencies ++= Seq(
   "org.json4s"               %% "json4s-ext"        % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
   "com.github.nscala-time"   %% "nscala-time"       % "2.10.0",
   "com.github.nscala-money"  %% "nscala-money"      % "0.11.0",
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.12.0",
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.18.1",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
@@ -48,19 +55,19 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics"    %  "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"    %  "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "nl.grons"                 %% "metrics-scala"     % "3.5.3" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
-  "com.github.jjagged"       %  "metrics-statsd"    % "1.0.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
+  "com.readytalk"             % "metrics3-statsd"   % "4.2.0" exclude("org.slf4j", "slf4j-api"),
   "com.novaquark"            %  "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
   "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind"),
 
-  "org.scalatest"            %% "scalatest"         % "2.2.5"         % "test",
-  "com.typesafe.akka"        %% "akka-http-testkit" % akkaHttpVersion % "test"
+  "org.scalatest"            %% "scalatest"         % "2.2.5"         % Test,
+  "com.typesafe.akka"        %% "akka-http-testkit" % akkaHttpVersion % Test
 )
 
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.8.3",
-    scalaVersion := "2.11.8",
+    version := "0.9.0",
+    scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
     publishMavenStyle := true,
