@@ -1,4 +1,5 @@
 import sbt.Keys._
+import sbt.librarymanagement.Resolver
 
 resolvers ++= Seq(
   Resolver.typesafeRepo("releases"),
@@ -8,9 +9,9 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val akkaVersion     = "2.5.6"
+val akkaVersion     = "2.5.12"
 
-val akkaHttpVersion = "10.0.10"
+val akkaHttpVersion = "10.1.1"
 
 val json4sVersion   = "3.5.3"
 
@@ -28,12 +29,12 @@ dependencyOverrides ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.getsentry.raven"      % "raven-logback"      % "7.6.0",
-  "org.codehaus.janino"      % "janino"             % "3.0.1",
-  "ch.qos.logback"           % "logback-classic"    % "1.1.7",
-  "org.logback-extensions"   % "logback-ext-loggly" % "0.1.4" exclude("ch.qos.logback", "logback-classic"),
-  "org.slf4j"                %  "slf4j-api"         % slf4jVersion,
-  "org.slf4j"                %  "log4j-over-slf4j"  % slf4jVersion,
+  "com.getsentry.raven"       % "raven-logback"      % "7.6.0",
+  "org.codehaus.janino"       % "janino"             % "3.0.1",
+  "ch.qos.logback"            % "logback-classic"    % "1.1.7",
+  "org.logback-extensions"    % "logback-ext-loggly" % "0.1.4" exclude("ch.qos.logback", "logback-classic"),
+  "org.slf4j"                 %  "slf4j-api"         % slf4jVersion,
+  "org.slf4j"                 %  "log4j-over-slf4j"  % slf4jVersion,
   "com.typesafe.akka"        %% "akka-actor"        % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-stream"       % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
@@ -42,22 +43,21 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"               %% "json4s-ext"        % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
-  "com.github.nscala-time"   %% "nscala-time"       % "2.10.0",
-  "com.github.nscala-money"  %% "nscala-money"      % "0.11.0",
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.18.1",
+  "com.github.nscala-time"   %% "nscala-time"       % "2.18.0",
+  "com.github.nscala-money"  %% "nscala-money"      % "0.13.0",
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.20.1",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
   "com.softwaremill.macwire" %% "proxy"             % macWireVersion exclude("org.scalatest", "scalatest_2.11"),
 
-  "io.dropwizard.metrics"    %  "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
-  "io.dropwizard.metrics"    %  "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
+  "io.dropwizard.metrics"     % "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
+  "io.dropwizard.metrics"     % "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "nl.grons"                 %% "metrics-scala"     % "3.5.3" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
   "com.readytalk"             % "metrics3-statsd"   % "4.2.0" exclude("org.slf4j", "slf4j-api"),
-  "com.novaquark"            %  "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
-  "org.coursera"             %  "metrics-datadog"   % "1.1.2" exclude("io.dropwizard.metrics", "metrics-core") exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations") exclude("com.fasterxml.jackson.core", "jackson-databind"),
+  "com.novaquark"             % "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
 
-  "org.scalatest"            %% "scalatest"         % "2.2.5"         % Test,
+  "org.scalatest"            %% "scalatest"         % "3.0.5"         % Test,
   "com.typesafe.akka"        %% "akka-http-testkit" % akkaHttpVersion % Test
 )
 

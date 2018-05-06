@@ -2,13 +2,16 @@ package com.featurefm.riversong
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding._
-import akka.http.scaladsl.model.StatusCode
+import akka.stream.ActorMaterializer
 import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
 import com.featurefm.riversong.client.{HttpClient, HttpSiteClient, MetricImplicits}
 import com.featurefm.riversong.metrics.reporting.Slf4jReporter
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
   * Created by yardena on 1/6/16.
@@ -28,23 +31,26 @@ class SiteClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTimeout
   val url1 = "/search?q=scala"
 //  val url2 = "/status"
 
-  "SiteClient" should "be able to connect to google.com" in {
-    var x: StatusCode = null
+  implicit val mat = ActorMaterializer()
+  implicit val ec = system.dispatcher
 
+  "SiteClient" should "be able to connect to google.com" in {
     {
       import client1.MethodAndPathNamedRequest
       val f = client1.send(Get(url1))
       whenReady(f) { result =>
-        x = result.status// shouldBe OK
+        result.status.intValue() shouldBe 200
       }
+      Await.ready(f flatMap (_.discardEntityBytes().future()), 1.second)
     }
 
     {
       import oldClient1.MethodAndPathNamedRequest
       val f2 = oldClient1.send(Get(url1))
       whenReady(f2) { result =>
-        result.status shouldBe x
+        result.status.intValue() shouldBe 200
       }
+      Await.ready(f2 flatMap (_.discardEntityBytes().future()), 1.second)
     }
 
   }
@@ -74,7 +80,7 @@ class SiteClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTimeout
 
   override protected def afterAll(): Unit = {
     new Slf4jReporter()(system, config.getConfig("metrics.reporters.Slf4j")).report()
-    system.terminate()
+    Await.ready(client1.shutdown() flatMap { _ => system.terminate() }, 3.seconds)
   }
 
 }
