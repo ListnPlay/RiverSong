@@ -9,15 +9,15 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val akkaVersion     = "2.5.12"
+val akkaVersion     = "2.5.17"
 
-val akkaHttpVersion = "10.1.1"
+val akkaHttpVersion = "10.1.5"
 
-val json4sVersion   = "3.5.3"
+val json4sVersion   = "3.6.2"
 
-val macWireVersion  = "2.2.2"
+val macWireVersion  = "2.3.1"
 
-val jacksonVersion  = "2.8.5"
+val jacksonVersion  = "2.9.7"
 
 val slf4jVersion    = "1.7.21"
 
@@ -45,7 +45,7 @@ libraryDependencies ++= Seq(
   "org.json4s"               %% "json4s-ext"        % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
   "com.github.nscala-time"   %% "nscala-time"       % "2.18.0",
   "com.github.nscala-money"  %% "nscala-money"      % "0.13.0",
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.20.1",
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.22.0",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
@@ -64,7 +64,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.9.1",
+    version := "0.9.2",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
