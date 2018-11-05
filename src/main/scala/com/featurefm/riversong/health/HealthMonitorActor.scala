@@ -34,7 +34,7 @@ class HealthMonitorActor(healthChecks: List[HealthCheck]) extends Actor with Act
       )) andThen {
         case Success(r) => context.system.eventStream.publish(r)
         case Failure(f) =>
-          log.error("Error checking health", f)
+          log.error(f, "Error checking health")
           context.system.eventStream.publish(SetHealth(false))
       }
   }
