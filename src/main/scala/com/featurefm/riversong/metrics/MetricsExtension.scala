@@ -14,14 +14,14 @@ class MetricsExtension(extendedSystem: ExtendedActorSystem) extends Extension wi
   // The application wide metrics registry.
   val metricRegistry = new MetricRegistry()
 
-  if (config.getBoolean("metrics.jvm")) {
-    // Register the Jvm metrics
-    val srv = ManagementFactory.getPlatformMBeanServer
-    metricRegistry.register("jvm.buffer-pool", new BufferPoolMetricSet(srv))
-    metricRegistry.register("jvm.gc",          new GarbageCollectorMetricSet)
-    metricRegistry.register("jvm.memory",      new MemoryUsageGaugeSet)
-    metricRegistry.register("jvm.thread",      new ThreadStatesGaugeSet)
-  }
+//  if (config.getBoolean("metrics.jvm")) {
+//    // Register the Jvm metrics
+//    val srv = ManagementFactory.getPlatformMBeanServer
+//    metricRegistry.register("jvm.buffer-pool", new BufferPoolMetricSet(srv))
+//    metricRegistry.register("jvm.gc",          new GarbageCollectorMetricSet)
+//    metricRegistry.register("jvm.memory",      new MemoryUsageGaugeSet)
+//    metricRegistry.register("jvm.thread",      new ThreadStatesGaugeSet)
+//  }
 }
 
 object Metrics extends ExtensionId[MetricsExtension] with ExtensionIdProvider {
