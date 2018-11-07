@@ -114,6 +114,15 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives
         }
       }
     } ~
+    path("legacy-metrics") {
+      get {
+        parameters('jvm ? "false", 'pattern.?) { (jvm, pattern) =>
+          complete {
+            writer.getMetrics(jvm.toBoolean, pattern)
+          }
+        }
+      }
+    } ~
     path("health") {
       get {
         onComplete(runChecks) {
