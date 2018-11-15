@@ -21,6 +21,8 @@ val jacksonVersion  = "2.9.7"
 
 val slf4jVersion    = "1.7.21"
 
+val prometheusVersion = "0.5.0"
+
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 
 dependencyOverrides ++= Seq(
@@ -51,6 +53,11 @@ libraryDependencies ++= Seq(
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
   "com.softwaremill.macwire" %% "proxy"             % macWireVersion exclude("org.scalatest", "scalatest_2.11"),
 
+  "io.prometheus"            %  "simpleclient"            % prometheusVersion,
+  "io.prometheus"            %  "simpleclient_hotspot"    % prometheusVersion,
+  "io.prometheus"            %  "simpleclient_common"     % prometheusVersion,
+  "io.prometheus"            %  "simpleclient_dropwizard" % prometheusVersion,
+  
   "io.dropwizard.metrics"     % "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"     % "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "nl.grons"                 %% "metrics-scala"     % "3.5.3" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
@@ -64,7 +71,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.9.3-SNAPSHOT",
+    version := "0.10.1",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),

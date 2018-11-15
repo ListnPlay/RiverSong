@@ -9,7 +9,8 @@ import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.{OverflowStrategy, Supervision}
 import akka.stream.scaladsl._
-import com.codahale.metrics.Timer
+import com.featurefm.riversong.metrics.MetricsDefinition._
+import io.prometheus.client.SimpleTimer
 
 import scala.concurrent.{Future, Promise}
 
@@ -56,12 +57,19 @@ class HttpSiteClient private (secure: Boolean = false)
     .map { x =>
       val naming = implicitly[NamedHttpRequest]
       val name = x.context.getOrElse("name", naming(x.unwrap)).toString
-      x.with_("timer", metrics.timer(name).timerContext()).toTuple
+      x.with_("timer", new SimpleTimer)
+        .with_("method", x.unwrap.method.value)
+        .with_("path", name)
+        .toTuple
     }
     .via(httpFlow)
     .map { x =>
       val y: ResponseInContext = InContext.fromTuple(x)
-      y.get[Timer.Context]("timer").stop()
+      val method = y.get[String]("method")
+      val path = y.get[String]("path")
+      val code = y.unwrap.map(_.status.value).getOrElse("")
+      val time = y.get[SimpleTimer]("timer").elapsedSeconds()
+      clientHttpRequestDuration.labels(method, host, path, code).observe(time)
       y
     }
     .addAttributes(supervisionStrategy(decider))

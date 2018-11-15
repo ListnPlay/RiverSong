@@ -1,14 +1,19 @@
 package com.featurefm.riversong.routes
 
+import java.util.concurrent.TimeoutException
+
 import akka.event.Logging
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.RouteResult.Complete
 import akka.http.scaladsl.server._
 import akka.stream.ActorMaterializer
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
+import com.featurefm.riversong.metrics.MetricsDefinition.{httpRequestDuration, _}
+import io.prometheus.client.SimpleTimer
 
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
  * Created by yardena on 8/6/15.
@@ -28,15 +33,20 @@ trait BaseRouting extends RiverSongRouting with Directives with Json4sProtocol w
 
   def measured(nameGenerator: HttpRequest => String = measurementNameDefault): Directive0 = {
     extractRequestContext.flatMap { ctx =>
-      val t = metrics.timer(nameGenerator(ctx.request)).timerContext()
+      val method = ctx.request.method.value
+      val path = nameGenerator(ctx.request)
+      val timer = new SimpleTimer
+
       mapResponse { response =>
-        t.stop()
+        val time = timer.elapsedSeconds()
+        val code = response.status.value
+        httpRequestDuration.labels(method, path, code).observe(time)
         response
       }
     }
   }
   
-  def measurementNameDefault(req: HttpRequest) = s"${req.method.value} ${req.uri.path}"
+  def measurementNameDefault(req: HttpRequest) = s"${req.uri.path}"
 
   def onCompleteMeasured[T](name: String)(future: => Future[T]): Directive1[Try[T]] = onCompleteMeasured(_ => name)(future)
 
@@ -44,10 +54,20 @@ trait BaseRouting extends RiverSongRouting with Directives with Json4sProtocol w
     import akka.http.scaladsl.util.FastFuture._
 
     Directive { inner => ctx =>
+      val method = ctx.request.method.value
+      val path = nameGenerator(ctx.request)
+      val timer = new SimpleTimer
 
-      val tc = metrics.timer(nameGenerator(ctx.request)).timerContext()
       val f = future.fast.transformWith(t => inner(Tuple1(t))(ctx))
-      f.onComplete(_ => tc.stop())
+
+      f.onComplete { res =>
+        val time = timer.elapsedSeconds()
+        val code = res match {
+          case Success(Complete(hr: HttpResponse)) => hr.status.value
+          case _ => "Error"
+        }
+        httpRequestDuration.labels(method, path, code).observe(time)
+      }
       f
     }
   }

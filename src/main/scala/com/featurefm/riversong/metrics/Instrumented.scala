@@ -1,8 +1,8 @@
 package com.featurefm.riversong.metrics
 
-import akka.actor.{ActorLogging, Actor, ActorSystem}
-import com.codahale.metrics.{MetricFilter, Metric}
-import nl.grons.metrics.scala.{Gauge, MetricName, InstrumentedBuilder}
+import akka.actor.{Actor, ActorLogging, ActorSystem}
+import com.codahale.metrics.{Metric, MetricFilter}
+import nl.grons.metrics.scala.{Gauge, InstrumentedBuilder, MetricName}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,18 +17,20 @@ trait Instrumented extends InstrumentedBuilder {
 
   override lazy val metricBaseName = MetricName(getClass.getSimpleName)
 
+  import MetricsDefinition._
+
   /**
    * The MetricRegistry where created metrics are registered.
    */
   lazy val metricRegistry = Metrics().metricRegistry
 
   def time[A](name: String)(f: => A): A = {
-    metrics.timer(name).time(f)
+    invocationDuration.labels(name).time(f)
   }
 
   def timeEventually[A](name: String)(future: => Future[A])(implicit context: ExecutionContext): Future[A] = {
-    val ctx = metrics.timer(name).timerContext()
-    future.andThen { case _ => ctx.stop() }
+    val timer = invocationDuration.labels(name).startTimer()
+    future.andThen { case _ => timer.observeDuration() }
   }
 
   def gauge[A](name: String, scope: String = null)(f: => A): Gauge[A] =
@@ -77,5 +79,5 @@ trait InstrumentedActor extends Actor with Instrumented { this: ActorLogging =>
     log.error(reason, message.map(_.toString).getOrElse(""))
     super.preRestart(reason, message)
   }
-
 }
+

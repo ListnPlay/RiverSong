@@ -8,11 +8,11 @@ import akka.http.scaladsl.model.HttpRequest
 trait MetricImplicits {
 
   case class FixedNaming(name: String) extends NamedHttpRequest {
-    override def apply(request: HttpRequest): String = s"${request.method.value} $name"
+    override def apply(request: HttpRequest): String = s"$name"
   }
 
   implicit object MethodAndPathNamedRequest extends NamedHttpRequest {
-    override def apply(request: HttpRequest): String = s"${request.method.value} ${request.uri.path}"
+    override def apply(request: HttpRequest): String = s"${request.uri.path}"
   }
 }
 
