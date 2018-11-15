@@ -9,7 +9,7 @@ import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.stream.ActorAttributes.supervisionStrategy
 import akka.stream.{OverflowStrategy, Supervision}
 import akka.stream.scaladsl._
-import com.featurefm.riversong.metrics.MetricsDefinition
+import com.featurefm.riversong.metrics.MetricsDefinition._
 import io.prometheus.client.SimpleTimer
 
 import scala.concurrent.{Future, Promise}
@@ -69,7 +69,7 @@ class HttpSiteClient private (secure: Boolean = false)
       val path = y.get[String]("path")
       val code = y.unwrap.map(_.status.value).getOrElse("")
       val time = y.get[SimpleTimer]("timer").elapsedSeconds()
-      MetricsDefinition.clientHttpRequestDuration.labels(method, host, path, code).observe(time)
+      clientHttpRequestDuration.labels(method, host, path, code).observe(time)
       y
     }
     .addAttributes(supervisionStrategy(decider))
