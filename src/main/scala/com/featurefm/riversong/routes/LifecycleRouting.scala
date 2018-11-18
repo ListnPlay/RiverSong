@@ -3,7 +3,7 @@ package com.featurefm.riversong.routes
 import java.net.URLDecoder
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.StatusCodes.{InternalServerError, ServiceUnavailable}
 import akka.http.scaladsl.server.{Directives, Route}
 import com.codahale.metrics.Metric
@@ -25,6 +25,8 @@ import scala.util.{Failure, Success, Try}
  */
 class LifecycleRouting(implicit val system: ActorSystem) extends Directives
         with BaseRouting with Configurable with HealthProvider {
+
+  lazy val prom = new PrometheusReporter(system, config)
 
   lazy val writer = new MetricsWriter(Metrics(system).metricRegistry)
 
@@ -104,6 +106,15 @@ class LifecycleRouting(implicit val system: ActorSystem) extends Directives
       }
     } ~
     path("metrics") {
+      get {
+        parameter('name.*) { names =>
+          complete {
+            HttpResponse(entity = HttpEntity(prom.contentType, prom.renderMetrics(names.toList)))
+          }
+        }
+      }
+    } ~
+    path("legacy-metrics") {
       get {
         parameters('jvm ? "false", 'pattern.?) { (jvm, pattern) =>
           complete {
