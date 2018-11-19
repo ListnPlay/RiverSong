@@ -47,7 +47,7 @@ libraryDependencies ++= Seq(
   "org.json4s"               %% "json4s-ext"        % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
   "com.github.nscala-time"   %% "nscala-time"       % "2.18.0",
   "com.github.nscala-money"  %% "nscala-money"      % "0.13.0",
-  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.22.0",
+  "de.heikoseeberger"        %% "akka-http-json4s"  % "1.20.1",
 
   "com.softwaremill.macwire" %% "macros"            % macWireVersion % "provided",
   "com.softwaremill.macwire" %% "util"              % macWireVersion,
@@ -71,7 +71,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.10.1",
+    version := "0.10.3-SNAPSHOT",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
