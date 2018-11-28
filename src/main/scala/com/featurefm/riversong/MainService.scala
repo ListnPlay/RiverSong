@@ -46,12 +46,13 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
 
   private[this] val F2 = new PeriodFormatterBuilder().appendDays().appendSuffix("d").appendHours().appendSuffix("h").appendMinutes().appendSuffix("m").printZeroAlways().appendSeconds().appendSuffix("s").toFormatter
 
+  val ignoredPaths: Set[String] = Set("/status", "/metrics")
 
   private def wrapper(req: HttpRequest): Any => Option[LogEntry] = {
     val beginning = Platform.currentTime
 
     {
-      case Complete(res) if req.method == HttpMethods.GET && req.uri.path.toString() == "/status" &&  res.status.isSuccess() =>
+      case Complete(res) if req.method == HttpMethods.GET && ignoredPaths.contains(req.uri.path.toString) &&  res.status.isSuccess() =>
         None
       case Complete(res) =>
         val duration = new Period(Platform.currentTime - beginning)
