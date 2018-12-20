@@ -61,8 +61,6 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics"     % "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"     % "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "nl.grons"                 %% "metrics-scala"     % "3.5.3" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
-  "com.readytalk"             % "metrics3-statsd"   % "4.2.0" exclude("org.slf4j", "slf4j-api"),
-  "com.novaquark"             % "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
 
   "org.scalatest"            %% "scalatest"         % "3.0.5"         % Test,
   "com.typesafe.akka"        %% "akka-http-testkit" % akkaHttpVersion % Test
@@ -71,7 +69,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.10.4-SNAPSHOT",
+    version := "0.10.4",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
