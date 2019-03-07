@@ -24,6 +24,7 @@ val slf4jVersion    = "1.7.21"
 val prometheusVersion = "0.5.0"
 
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
+parallelExecution in Test := false
 
 dependencyOverrides ++= Seq(
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
@@ -41,6 +42,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"        %% "akka-stream"       % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-http"         % akkaHttpVersion exclude("com.typesafe", "config"),
+  "com.typesafe.akka"         %% "akka-stream-kafka"  % "1.0",
   "com.fasterxml.jackson.core" % "jackson-core"     % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
@@ -61,15 +63,20 @@ libraryDependencies ++= Seq(
   "io.dropwizard.metrics"     % "metrics-core"      % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"     % "metrics-jvm"       % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "nl.grons"                 %% "metrics-scala"     % "3.5.3" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
+  "org.apache.kafka"          %% "kafka"              % "2.1.0" excludeAll(ExclusionRule("log4j"), ExclusionRule("org.slf4j")),
 
-  "org.scalatest"            %% "scalatest"         % "3.0.5"         % Test,
-  "com.typesafe.akka"        %% "akka-http-testkit" % akkaHttpVersion % Test
+  //------------------------------------ T E S T ----------------------------------------------
+
+  "org.scalatest"            %% "scalatest"                 % "3.0.5"         % Test,
+  "net.manub"                %% "scalatest-embedded-kafka"  % "2.0.0"         % Test,
+  "org.mockito"              %% "mockito-scala"             % "1.1.3"         % Test,
+  "com.typesafe.akka"        %% "akka-http-testkit"         % akkaHttpVersion % Test
 )
 
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.10.5",
+    version := "0.10.7",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
