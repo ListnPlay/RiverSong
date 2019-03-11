@@ -12,6 +12,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
 import com.featurefm.riversong.Configurable
+import com.featurefm.riversong.health.{HealthCheck, HealthInfo, HealthState}
 import com.featurefm.riversong.metrics.Instrumented
 import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
 import org.apache.kafka.common.{PartitionInfo, TopicPartition}
@@ -23,7 +24,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 
-class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrumented with Configurable {
+class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrumented with Configurable with HealthCheck {
 
   protected lazy val log = Logging(system, getClass)
 
@@ -35,12 +36,12 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
   val defaultClientId = config.getString("kafka.receive.client-id")
   val defaultAutoOffsetReset = config.getString("kafka.receive.auto-offset")
 
-  val partitionConsumerSettings = createConsumerSettings(defaultGroupId + "-partition", defaultClientId + "-partition", true)
-  val timeout = 5.seconds
-  val settings = partitionConsumerSettings.withMetadataRequestTimeout(timeout)
+  private val partitionConsumerSettings = createConsumerSettings(defaultGroupId + "-partition", defaultClientId + "-partition", true)
+  private val timeout = 5.seconds
+  private val settings = partitionConsumerSettings.withMetadataRequestTimeout(timeout)
   implicit val askTimeout = Timeout(timeout)
 
-  val consumer: ActorRef = system.actorOf(KafkaConsumerActor.props(settings))
+  private val consumer: ActorRef = system.actorOf(KafkaConsumerActor.props(settings))
 
   import akka.pattern.ask
   import system.dispatcher
@@ -202,6 +203,21 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
     consumer
   }
 
+  /**
+    * Fetch the health for this registered checker.
+    *
+    * @return returns a future to the health information
+    */
+  override def getHealth: Future[HealthInfo] = {
+    topicsFuture map { n =>
+      if (!n.getResponse.isPresent || n.getResponse.get().isEmpty)
+        HealthInfo(HealthState.CRITICAL, details = s"no topics")
+      else
+        HealthInfo(HealthState.OK, details = s"topicss=${n.getResponse.get().keySet()}")
+    } recover { case e =>
+      HealthInfo(HealthState.CRITICAL, details = e.toString)
+    }
+  }
 }
 
 object KafkaConsumerService {
