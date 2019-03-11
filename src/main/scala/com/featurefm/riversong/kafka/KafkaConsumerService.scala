@@ -27,6 +27,8 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 
   protected lazy val log = Logging(system, getClass)
 
+  implicit val mat = ActorMaterializer()
+
   val brokers: KeyType = config.getString("kafka.hosts")
 
   val defaultGroupId = config.getString("kafka.receive.group-id")
