@@ -2,6 +2,7 @@ package com.featurefm.riversong.kafka
 
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicReference
 
 import akka.Done
@@ -11,12 +12,14 @@ import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{RestartSource, Sink, Source, SourceQueue}
+import akka.util.Timeout
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.{Configurable, InitBeforeUse}
 import io.prometheus.client.Counter
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
 import scala.util.Try
@@ -29,7 +32,12 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
   implicit val mat = ActorMaterializer()
 
   val brokers: KeyType = config.getString("kafka.hosts")
-  val queueBuffer: Int = config.getInt("kafka.send.producer-queue-buffer")
+  private val queueBuffer: Int = config.getInt("kafka.send.producer-queue-buffer")
+  private val sendTimeout = config.getLong("kafka.send.call-timeout-ms").millis
+  private val minBackoff = config.getLong("kafka.send.backoff.min-in-ms").millis
+  private val maxBackoff = config.getLong("kafka.send.backoff.max-in-ms").millis
+  private val randomFactor: Int = config.getInt("kafka.send.backoff.random-factor")
+  private val maxRestarts: Int = config.getInt("kafka.send.backoff.max-restarts")
 
   private lazy val producerSettings = ProducerSettings[KeyType, ValueType](system, new StringSerializer, new ByteArraySerializer).withBootstrapServers(brokers)
 
@@ -37,7 +45,7 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
   val ref = new AtomicReference[SourceQueue[ProducerMessage.Message[KeyType, ValueType, Promise[Long]]]]()
 
   override def initialize(): Future[Done] = {
-    RestartSource.onFailuresWithBackoff(minBackoff = 500.millis, maxBackoff = 2.seconds, randomFactor = 0, maxRestarts = -1)(() =>
+    RestartSource.onFailuresWithBackoff(minBackoff, maxBackoff, randomFactor, maxRestarts)(() =>
       Source
         .queue[ProducerMsgType](queueBuffer, OverflowStrategy.dropHead)
         .mapMaterializedValue(queue => {
@@ -74,7 +82,16 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
 
     ref.get.offer(ProducerMessage.Message[String, ValueType, Promise[Long]](new ProducerRecord(topic, key, value), p))
 
-    p.future
+    import akka.pattern.after
+    import system.dispatcher
+    // count events where timeout occurred (dropped out of queue?)
+    val monitorIfTimeout =  after(sendTimeout, using = system.scheduler)(Future successful {
+      KafkaService.msgMetric.labels(s"$topic-timeout").inc()
+      0L
+    })
+
+    Future.firstCompletedOf(Seq(
+      p.future, monitorIfTimeout))
   }
 
 }
