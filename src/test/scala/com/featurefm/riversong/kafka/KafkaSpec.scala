@@ -191,8 +191,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
       Thread.sleep(2000)
       assert(f.isCompleted)
-      //TODO: fix it
-     // assert(!f2.isCompleted)
+      assert(!f2.isCompleted)
 
     }
 

@@ -44,9 +44,10 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 
   private val consumer: ActorRef = system.actorOf(KafkaConsumerActor.props(settings))
 
+  consumer
   import akka.pattern.ask
   import system.dispatcher
-  val topicsFuture: Future[Metadata.Topics] = (consumer ? Metadata.ListTopics).mapTo[Metadata.Topics]
+  def topicsFuture: Future[Metadata.Topics] = (consumer ? Metadata.ListTopics).mapTo[Metadata.Topics]
 
 
   /**
@@ -80,9 +81,9 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
                   waitTimeInMs: Long = -1): Source[ConsumerMessageType, _] = {
 
     Source.fromFuture(getPartitionsPerTopic(topics))
-      .flatMapConcat { partitions =>
+      .flatMapMerge(1, { partitions =>
         log.info(s"topics and partitions: $partitions")
-        val partitionToTimeMap = Map(partitions.map({ a => new TopicPartition(a.topic(), a.partition()) -> long2Long(timestamp) }): _*)
+        val partitionToTimeMap = Map(new TopicPartition(topics.get(0), 0) -> 0L)// Map(partitions.map({ a => new TopicPartition(a.topic(), a.partition()) -> long2Long(timestamp) }): _*)
 
         val baseSource = Consumer.plainSource(consumerSettings, Subscriptions.assignmentOffsetsForTimes(partitionToTimeMap))
 
@@ -101,7 +102,7 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
           }
 
         source
-      }
+      })
   }
 
   /**
