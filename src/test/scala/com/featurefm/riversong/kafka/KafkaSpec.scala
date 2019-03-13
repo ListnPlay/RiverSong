@@ -6,8 +6,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
-import org.apache.kafka.clients.consumer.OffsetAndTimestamp
-import org.apache.kafka.common.{PartitionInfo, TopicPartition}
+import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
@@ -23,6 +22,7 @@ case class MyCaseClass(stringy: String, numbery: Int)
 class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with EmbeddedKafka  with ScalaFutures with Matchers{
 
   implicit val config = EmbeddedKafkaConfig(kafkaPort = 9092)
+  implicit val serializer = new ByteArraySerializer()
   override implicit def patienceConfig: PatienceConfig = PatienceConfig(scaled(Span(2, Seconds)), scaled(Span(50, Millis)))
 
   implicit val mat: ActorMaterializer = ActorMaterializer()
@@ -201,51 +201,31 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
   }
 
-//  import scala.collection.JavaConversions._
-//  val partitionsList = new java.util.ArrayList[PartitionInfo]()
-//  partitionsList.add(new PartitionInfo("abc", 1, null, Array.empty, Array.empty))
-//  partitionsList.add(new PartitionInfo("abc", 2, null, Array.empty, Array.empty))
-//  partitionsList.add(new PartitionInfo("abc", 3, null, Array.empty, Array.empty))
-//  val offsetsForTimesMap:java.util.Map[TopicPartition, java.lang.Long] = Map[TopicPartition, java.lang.Long](new TopicPartition("abc", 1) -> 100L,
-//    new TopicPartition("abc", 2) -> 100L,
-//    new TopicPartition("abc", 3) -> 100L)
-//  val offsetsPerPartition:java.util.Map[TopicPartition, OffsetAndTimestamp] = Map[TopicPartition, OffsetAndTimestamp](new TopicPartition("abc", 1) -> new OffsetAndTimestamp(345, 123),
-//    new TopicPartition("abc", 2) -> new OffsetAndTimestamp(7777, 103),
-//    new TopicPartition("abc", 3) -> new OffsetAndTimestamp(11, 102))
-//
-//  val tp = new TopicPartition("abc", 1)
-//  val tp2 = new TopicPartition("abc", 2)
-//  val tp3 = new TopicPartition("abc", 3)
+  "consumer kafka service" should "handle messages" in {
+    withRunningKafka {
 
-//  "consumer kafka service" should "handle messages" in {
-//    withRunningKafka {
-//
-//      Thread.sleep(2000)
-//      val kafkaService = Mockito.spy(new KafkaConsumerService())
-//      Thread.sleep(2000)
-//
-//      val mockConsumer = Mockito.mock(classOf[KafkaConsumer[KeyType, ValueType]])
-//      Mockito.when(kafkaService.createConsumer("abc")).thenReturn(mockConsumer)
-//      Mockito.when(mockConsumer.partitionsFor("abc")).thenReturn(partitionsList)
-//
-//      val source: Source[ConsumerMessageType, _] = kafkaService.listenSince("abc", 100, 1000)
-//      val f: Future[Seq[ConsumerMessageType]] = source.take(2).runWith(Sink.seq)
-//
-//      publishStringMessageToKafka("abc", "message_abc1")
-//      publishStringMessageToKafka("abc", "message_abc2")
-//
-//      whenReady(f) { res: Seq[ConsumerMessageType] =>
-//        assert(res.size == 2)
-//        assert(res(0).topic() == "abc")
-//        assert(res(0).partition() == 1)
-//        assert(res(0).offset() == 346)
-//        assert(res(1).topic() == "abc")
-//        assert(res(1).partition() == 2)
-//        assert(res(1).offset() == 7778)
-//      }
-//    }
-//
-//  }
+      publishToKafka("abc", KafkaService.toBytes[String]("message_abc11"))
+      publishToKafka("abc", KafkaService.toBytes[String]("message_abc22"))
+      publishToKafka("abc", KafkaService.toBytes[String]("message_abc33"))
+
+      Thread.sleep(2000)
+      val kafkaService = Mockito.spy(new KafkaConsumerService())
+      Thread.sleep(2000)
+
+      val settings = kafkaService.createBasicConsumerSettings()
+      val source: Source[ConsumerMessageType, _] = kafkaService.listenSince(Seq("abc"), settings, 100, 1000)
+      val f: Future[Seq[ConsumerMessageType]] = source.take(2).runWith(Sink.seq)
+
+      whenReady(f) { res: Seq[ConsumerMessageType] =>
+        res.size shouldEqual 2
+        res(0).topic() shouldEqual "abc"
+        res(0).value() shouldEqual  KafkaService.toBytes[String]("message_abc11")
+        res(1).topic() shouldEqual "abc"
+        res(1).value() shouldEqual KafkaService.toBytes[String]("message_abc22")
+      }
+    }
+
+  }
 
 
 }
