@@ -117,13 +117,10 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       val settings = kafkaService.createBasicConsumerSettings()
       val source = kafkaService.listenSince(Seq("topic7", "topic8", "topic9"), settings, Platform.currentTime)
       val f1 = source.take(2).runWith(Sink.ignore)
-      //Thread.sleep(1000)
+
       publishStringMessageToKafka("topic7", "message3327111")
       publishStringMessageToKafka("topic8", "message3328")
       publishStringMessageToKafka("topic7", "message3327222")
-      publishStringMessageToKafka("topic8", "message3328")
-      publishStringMessageToKafka("topic7", "message3327")
-      publishStringMessageToKafka("topic8", "message3328")
 
      whenReady(f1) { res =>
         res shouldBe Done
@@ -209,7 +206,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       publishToKafka("abc", KafkaService.toBytes[String]("message_abc33"))
 
       Thread.sleep(2000)
-      val kafkaService = Mockito.spy(new KafkaConsumerService())
+      val kafkaService = new KafkaConsumerService()
       Thread.sleep(2000)
 
       val settings = kafkaService.createBasicConsumerSettings()

@@ -85,9 +85,9 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
     import akka.pattern.after
     import system.dispatcher
     // count events where timeout occurred (dropped out of queue?)
-    val monitorIfTimeout =  after(sendTimeout, using = system.scheduler)(Future successful {
+    val monitorIfTimeout =  after(sendTimeout, using = system.scheduler)(Future {
       KafkaService.msgMetric.labels(s"$topic-timeout").inc()
-      0L
+      throw new TimeoutException(s"Sending to kafka got timeout after $sendTimeout ms message with topic:$topic key:$key")
     })
 
     Future.firstCompletedOf(Seq(
