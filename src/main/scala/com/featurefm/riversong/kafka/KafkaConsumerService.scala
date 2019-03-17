@@ -44,7 +44,6 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 
   private val consumer: ActorRef = system.actorOf(KafkaConsumerActor.props(settings))
 
-  consumer
   import akka.pattern.ask
   import system.dispatcher
   def topicsFuture: Future[Metadata.Topics] = (consumer ? Metadata.ListTopics).mapTo[Metadata.Topics]

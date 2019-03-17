@@ -42,7 +42,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"        %% "akka-stream"       % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-slf4j"        % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"        %% "akka-http"         % akkaHttpVersion exclude("com.typesafe", "config"),
-  "com.typesafe.akka"         %% "akka-stream-kafka"  % "1.0",
+  "com.typesafe.akka"         %% "akka-stream-kafka"  % "1.0.1",
   "com.fasterxml.jackson.core" % "jackson-core"     % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
   "org.json4s"               %% "json4s-jackson"    % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),

@@ -76,7 +76,7 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
     KafkaService.msgMetric.labels(topic).inc()
 
     if (ref.get == null)
-      Future failed new RuntimeException("Source queue for kafka producer wasn't created")
+      return Future failed new RuntimeException("Source queue for kafka producer wasn't created")
 
     val p = Promise[Long]
 

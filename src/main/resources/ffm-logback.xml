@@ -15,6 +15,9 @@
         <dsn>${SENTRY_URL:-https://54b475227430444ba82fcccfa8497ac8:b21af5521971431bad11cd32455080d9@sentry.io/96653}</dsn>
         <tags>APP:${MARATHON_APP_ID},HOSTNAME:${HOSTNAME},HOST:${HOST}</tags>
     </appender>
+    <logger name="org.apache.kafka" level="info">
+        <appender-ref ref="STDOUT" />
+    </logger>
     <root level="info">
         <if condition='isDefined("LOGBACK_APPENDERS")'>
             <then>
