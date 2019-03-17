@@ -81,7 +81,8 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 
     Source.fromFuture(getPartitionsPerTopic(topics))
       .flatMapMerge(1, { partitions =>
-        log.info(s"topics and partitions: $partitions")
+        log.info(s"Start listening to topics: $topics")
+        log.info(s"Partitions per topic: $partitions")
         val partitionToTimeMap = Map(new TopicPartition(topics.get(0), 0) -> 0L)// Map(partitions.map({ a => new TopicPartition(a.topic(), a.partition()) -> long2Long(timestamp) }): _*)
 
         val baseSource = Consumer.plainSource(consumerSettings, Subscriptions.assignmentOffsetsForTimes(partitionToTimeMap))
@@ -123,7 +124,7 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 
   /**
     * create a basic cunsumerSettings with GroupId, ClientId and AutoOffsetReset values read from config
-    * @param continueFromGroupLastOffset
+    * @param continueFromGroupLastOffset - whether to give unique id to group, or use existing one
     * @return cunsumer's Settings
     */
   def createBasicConsumerSettings(continueFromGroupLastOffset: Boolean = true): ConsumerSettings[KeyType, ValueType] = {

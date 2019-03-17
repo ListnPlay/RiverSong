@@ -10,18 +10,16 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
-import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{RestartSource, Sink, Source, SourceQueue}
-import akka.util.Timeout
+import akka.stream.{ActorMaterializer, OverflowStrategy}
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.{Configurable, InitBeforeUse}
 import io.prometheus.client.Counter
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
 import scala.util.Try
 import scala.util.hashing.MurmurHash3
 
@@ -45,6 +43,7 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
   val ref = new AtomicReference[SourceQueue[ProducerMessage.Message[KeyType, ValueType, Promise[Long]]]]()
 
   override def initialize(): Future[Done] = {
+    log.info(s"Initializing producer to kafka server: $brokers with backoff params: minBackoff=$minBackoff, maxBackoff=$maxBackoff, randomFactor=$randomFactor, maxRestarts=$maxRestarts")
     RestartSource.onFailuresWithBackoff(minBackoff, maxBackoff, randomFactor, maxRestarts)(() =>
       Source
         .queue[ProducerMsgType](queueBuffer, OverflowStrategy.dropHead)
