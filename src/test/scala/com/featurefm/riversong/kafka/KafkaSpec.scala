@@ -11,16 +11,15 @@ import org.mockito.Mockito
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{FlatSpecLike, Matchers}
+import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers}
 
 import scala.compat.Platform
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 case class MyCaseClass(stringy: String, numbery: Int)
 
 
-class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with EmbeddedKafka  with ScalaFutures with Matchers{
+class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with EmbeddedKafka  with ScalaFutures with Matchers with BeforeAndAfterAll{
 
   implicit val config = EmbeddedKafkaConfig(kafkaPort = 9092)
   implicit val serializer = new ByteArraySerializer()
@@ -28,19 +27,24 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
   implicit val mat: ActorMaterializer = ActorMaterializer()
 
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    EmbeddedKafka.start()
+  }
+
+  override def afterAll(): Unit = {
+    EmbeddedKafka.stop()
+    super.afterAll()
+  }
+
   "running with embedded kafka" should "work" in {
 
-    withRunningKafka {
       // embedded kafka sanity test
       publishStringMessageToKafka("topic", "message")
       consumeFirstStringMessageFrom("topic") equals "message"
-    }
   }
 
   "producer kafka service" should "convert to bytes" in {
-    withRunningKafka {
-
-      Thread.sleep(2000)
       val kafkaService = spy(new KafkaProducerService())
       kafkaService.initialize()
       Thread.sleep(2000)
@@ -48,13 +52,9 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       val p: Future[Long] = kafkaService.sendRaw[Seq[String]]("topic2", Seq("123", "456"))
       val b = """["123","456"]""".getBytes
       Mockito.verify(kafkaService, times(1)).send("topic2", b, KafkaService.hashKey(b))
-    }
   }
 
   "producer kafka service" should "send event messages" in {
-    withRunningKafka {
-
-      Thread.sleep(2000)
       val kafkaService = new KafkaProducerService()
       kafkaService.initialize()
       Thread.sleep(2000)
@@ -83,14 +83,10 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
       assert(consumeFirstStringMessageFrom("topic4") == "content3")
       assert(consumeFirstStringMessageFrom("topic4") == "content4")
-    }
 
   }
 
   "producer kafka service" should "sendRaw event messages with any type" in {
-    withRunningKafka {
-
-      Thread.sleep(2000)
       val kafkaService = new KafkaProducerService()
       kafkaService.initialize()
       Thread.sleep(2000)
@@ -102,11 +98,9 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       whenReady(p) { res: Long =>
         assert(res == 0)
       }
-    }
   }
 
   "consumer kafka service" should "simply listen" in {
-    withRunningKafka {
 
       publishStringMessageToKafka("topic7", "message3327")
       publishStringMessageToKafka("topic8", "message3328")
@@ -126,15 +120,12 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
      whenReady(f1) { res =>
         res shouldBe Done
       }
-    }
   }
 
   "consumer kafka service" should "listen to messages" in {
-    withRunningKafka {
 
       publishStringMessageToKafka("topic3", "message332")
       publishStringMessageToKafka("topic32", "message332")
-      Thread.sleep(2000)
       val kafkaService = new KafkaConsumerService()
       Thread.sleep(2000)
 
@@ -153,32 +144,27 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       // test future
       assert(!f5.isCompleted)
       assert(f3.isCompleted)
-    }
   }
 
   "consumer kafka service" should "handle the waitTime parameter" in {
-    withRunningKafka {
-      Thread.sleep(2000)
       val kafkaService = new KafkaConsumerService()
       Thread.sleep(2000)
 
-      publishStringMessageToKafka("abc", "message332")
+      publishStringMessageToKafka("abc1", "message332")
       val settings = kafkaService.createBasicConsumerSettings()
-      val source: Source[ConsumerMessageType, _] = kafkaService.listenSince(Seq("abc"), settings, 100, 1000)
+      val source: Source[ConsumerMessageType, _] = kafkaService.listenSince(Seq("abc1"), settings, 100, 1000)
       val f: Future[Seq[ConsumerMessageType]] = source.runWith(Sink.seq)
-      val source2: Source[ConsumerMessageType, _] = kafkaService.listenSince(Seq("abc"), settings, 100, 4000)
+      val source2: Source[ConsumerMessageType, _] = kafkaService.listenSince(Seq("abc1"), settings, 100, 4000)
       val f2: Future[Seq[ConsumerMessageType]] = source2.runWith(Sink.seq)
 
       Thread.sleep(2000)
       assert(f.isCompleted)
       assert(!f2.isCompleted)
 
-    }
 
   }
 
   "consumer kafka service" should "handle messages" in {
-    withRunningKafka {
 
       publishToKafka("abc", KafkaService.toBytes[String]("message_abc11"))
       publishToKafka("abc", KafkaService.toBytes[String]("message_abc22"))
@@ -199,7 +185,6 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
         res(1).topic() shouldEqual "abc"
         res(1).value() shouldEqual KafkaService.toBytes[String]("message_abc22")
       }
-    }
 
   }
 
