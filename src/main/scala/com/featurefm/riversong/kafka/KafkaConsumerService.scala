@@ -25,7 +25,7 @@ import scala.concurrent.duration._
 import scala.util.Try
 
 
-class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrumented with Configurable with HealthCheck {
+class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumented with Configurable with HealthCheck {
 
   protected lazy val log = Logging(system, getClass)
 
@@ -46,17 +46,18 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 
   import akka.pattern.ask
   import system.dispatcher
+
   def topicsFuture: Future[Metadata.Topics] = (consumer ? Metadata.ListTopics).mapTo[Metadata.Topics]
 
 
   /**
     * Getting a commitable source to start listening to Kafka. kafka handles offsets, commit should be called. (used by: Subscription)
     *
-    * @param topics - topics to listen and poll messages
+    * @param topics           - topics to listen and poll messages
     * @param consumerSettings - consumer's settings
     * @return - commitable source
     */
-  def committableSource(topics: Seq[String], consumerSettings: ConsumerSettings[KeyType,ValueType]): Source[ConsumerComittableMessageType, _] = {
+  def committableSource(topics: Seq[String], consumerSettings: ConsumerSettings[KeyType, ValueType]): Source[ConsumerComittableMessageType, _] = {
 
     log.info(s"Start listening to topics ${topics.toSet}")
     Consumer.committableSource(consumerSettings, Subscriptions.topics(topics.toSet))
@@ -68,14 +69,14 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
     * 1. Keep on listening (used by: CampaignServer)
     * 2. Read all messages and stop. finish after 'waitTimeInMs'. (used by: EventsManager for debugger)
     *
-    * @param topics - topics to listen and poll messages
+    * @param topics           - topics to listen and poll messages
     * @param consumerSettings - consumer's settings
-    * @param timestamp - listen to messages with  offset from this timestamp
-    * @param waitTimeInMs - by default -1, which means Option 1. Positive value to define when to stop reading, in Option 2
+    * @param timestamp        - listen to messages with  offset from this timestamp
+    * @param waitTimeInMs     - by default -1, which means Option 1. Positive value to define when to stop reading, in Option 2
     * @return - source
     */
   def listenSince(topics: Seq[String],
-                  consumerSettings: ConsumerSettings[KeyType,ValueType],
+                  consumerSettings: ConsumerSettings[KeyType, ValueType],
                   timestamp: Long = Platform.currentTime,
                   waitTimeInMs: Long = -1): Source[ConsumerMessageType, _] = {
 
@@ -124,6 +125,7 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 
   /**
     * create a basic cunsumerSettings with GroupId, ClientId and AutoOffsetReset values read from config
+    *
     * @param continueFromGroupLastOffset - whether to give unique id to group, or use existing one
     * @return cunsumer's Settings
     */
@@ -136,7 +138,7 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, defaultAutoOffsetReset)
   }
 
-  private def createConsumerSettings(groupId: String, clientId:String, useUniqueId: Boolean = true): ConsumerSettings[KeyType, ValueType] = {
+  private def createConsumerSettings(groupId: String, clientId: String, useUniqueId: Boolean = true): ConsumerSettings[KeyType, ValueType] = {
     val processId = if (useUniqueId) s"-${UUID.randomUUID()}" else ""
     ConsumerSettings(system, new StringDeserializer, new ByteArrayDeserializer)
       .withBootstrapServers(brokers)
@@ -162,6 +164,7 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
 }
 
 object KafkaConsumerService {
+
   import com.featurefm.riversong.Json4sProtocol._
 
   def fromBytes[T](bytes: Array[Byte])(implicit m: Manifest[T]): Try[T] =
