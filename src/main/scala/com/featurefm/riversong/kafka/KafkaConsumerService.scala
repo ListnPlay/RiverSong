@@ -83,7 +83,7 @@ class KafkaConsumerService ()(implicit val system: ActorSystem) extends Instrume
       .flatMapMerge(1, { partitions =>
         log.info(s"Start listening to topics: $topics")
         log.info(s"Partitions per topic: $partitions")
-        val partitionToTimeMap = Map(new TopicPartition(topics.get(0), 0) -> 0L)// Map(partitions.map({ a => new TopicPartition(a.topic(), a.partition()) -> long2Long(timestamp) }): _*)
+        val partitionToTimeMap = Map(partitions.map({ a => new TopicPartition(a.topic(), a.partition()) -> long2Long(timestamp) }): _*)
 
         val baseSource = Consumer.plainSource(consumerSettings, Subscriptions.assignmentOffsetsForTimes(partitionToTimeMap))
 
