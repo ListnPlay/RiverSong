@@ -15,10 +15,10 @@
         <dsn>${SENTRY_URL:-https://54b475227430444ba82fcccfa8497ac8:b21af5521971431bad11cd32455080d9@sentry.io/96653}</dsn>
         <tags>APP:${MARATHON_APP_ID},HOSTNAME:${HOSTNAME},HOST:${HOST}</tags>
     </appender>
-    <logger name="org.apache.kafka" level="info">
+    <logger name="org.apache.kafka" level="WARN">
         <appender-ref ref="STDOUT" />
     </logger>
-    <logger name="org.apache.zookeeper" level="info">
+    <logger name="org.apache.zookeeper" level="WARN">
         <appender-ref ref="STDOUT" />
     </logger>
     <root level="info">

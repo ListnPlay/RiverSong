@@ -33,13 +33,14 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
   }
 
   override def afterAll(): Unit = {
+    system.terminate()
     EmbeddedKafka.stop()
     super.afterAll()
   }
 
   "running with embedded kafka" should "work" in {
-
       // embedded kafka sanity test
+      createCustomTopic("topic")
       publishStringMessageToKafka("topic", "message")
       consumeFirstStringMessageFrom("topic") equals "message"
   }
@@ -49,6 +50,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       kafkaService.initialize()
       Thread.sleep(2000)
 
+      createCustomTopic("topic2")
       val p: Future[Long] = kafkaService.sendRaw[Seq[String]]("topic2", Seq("123", "456"))
       val b = """["123","456"]""".getBytes
       Mockito.verify(kafkaService, times(1)).send("topic2", b, KafkaService.hashKey(b))
@@ -59,6 +61,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       kafkaService.initialize()
       Thread.sleep(2000)
 
+      createCustomTopic("topic4")
       val p: Future[Long] = kafkaService.send("topic4", "content1".getBytes())
       assert(consumeFirstStringMessageFrom("topic4") == "content1")
       // test future
@@ -91,6 +94,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       kafkaService.initialize()
       Thread.sleep(2000)
 
+      createCustomTopic("topic6")
       val p: Future[Long] = kafkaService.sendRaw[MyCaseClass]("topic6", MyCaseClass("maroon", 5))
       assert(consumeFirstStringMessageFrom("topic6") == """{"stringy":"maroon","numbery":5}""")
 
@@ -102,6 +106,9 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
   "consumer kafka service" should "simply listen" in {
 
+      createCustomTopic("topic7")
+      createCustomTopic("topic8")
+      createCustomTopic("topic9")
       publishStringMessageToKafka("topic7", "message3327")
       publishStringMessageToKafka("topic8", "message3328")
       publishStringMessageToKafka("topic9", "message3329")
@@ -124,6 +131,8 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
   "consumer kafka service" should "listen to messages" in {
 
+      createCustomTopic("topic3")
+      createCustomTopic("topic32")
       publishStringMessageToKafka("topic3", "message332")
       publishStringMessageToKafka("topic32", "message332")
       val kafkaService = new KafkaConsumerService()
@@ -150,6 +159,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       val kafkaService = new KafkaConsumerService()
       Thread.sleep(2000)
 
+      createCustomTopic("abc1")
       publishStringMessageToKafka("abc1", "message332")
       val settings = kafkaService.createBasicConsumerSettings()
       val source: Source[ConsumerMessageType, _] = kafkaService.listenSince(Seq("abc1"), settings, 100, 1000)
@@ -166,6 +176,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
   "consumer kafka service" should "handle messages" in {
 
+      createCustomTopic("abc")
       publishToKafka("abc", KafkaService.toBytes[String]("message_abc11"))
       publishToKafka("abc", KafkaService.toBytes[String]("message_abc22"))
       publishToKafka("abc", KafkaService.toBytes[String]("message_abc33"))
