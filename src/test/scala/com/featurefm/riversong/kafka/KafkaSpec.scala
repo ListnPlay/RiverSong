@@ -15,6 +15,7 @@ import org.scalatest.{FlatSpecLike, Matchers}
 
 import scala.compat.Platform
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 case class MyCaseClass(stringy: String, numbery: Int)
 
@@ -152,27 +153,6 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
       // test future
       assert(!f5.isCompleted)
       assert(f3.isCompleted)
-    }
-  }
-
-  "consumer kafka service" should "handle unfamiliar topic" in {
-    withRunningKafka {
-
-      publishStringMessageToKafka("topic31", "message332")
-      publishStringMessageToKafka("topic32", "message332")
-      Thread.sleep(2000)
-      val kafkaService = new KafkaConsumerService()
-      Thread.sleep(2000)
-
-      val settings = kafkaService.createBasicConsumerSettings()
-      val source = kafkaService.listenSince(Seq("topic3333"), settings, 1000)
-      publishStringMessageToKafka("topic3333", "message332")
-
-      val f5 = source.take(1).runWith(Sink.ignore)
-
-      whenReady(f5.failed) { e =>
-        e shouldBe a [IllegalStateException]
-      }
     }
   }
 

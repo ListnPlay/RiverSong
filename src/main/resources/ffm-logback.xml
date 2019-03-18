@@ -18,6 +18,9 @@
     <logger name="org.apache.kafka" level="info">
         <appender-ref ref="STDOUT" />
     </logger>
+    <logger name="org.apache.zookeeper" level="info">
+        <appender-ref ref="STDOUT" />
+    </logger>
     <root level="info">
         <if condition='isDefined("LOGBACK_APPENDERS")'>
             <then>
