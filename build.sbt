@@ -28,11 +28,6 @@ parallelExecution in Test := false
 fork in Test := true
 javaOptions in Test ++= Seq("-Dlogback.configurationFile=test-logback.xml")
 
-dependencyOverrides ++= Seq(
-  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  "com.typesafe.akka" %% "akka-actor" % akkaVersion
-)
-
 libraryDependencies ++= Seq(
   "com.typesafe.akka"         %% "akka-actor"               % akkaVersion exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"         %% "akka-stream"              % akkaVersion exclude("org.scala-lang", "scala-library"),
@@ -45,7 +40,7 @@ libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-annotations"      % jacksonVersion,
   "org.json4s"                %% "json4s-jackson"           % json4sVersion exclude("com.fasterxml.jackson.core", "jackson-core") exclude("com.fasterxml.jackson.core", "jackson-annotations"),
   "org.json4s"                %% "json4s-ext"               % json4sVersion exclude("joda-time","joda-time") exclude("org.joda","joda-convert"),
-  "de.heikoseeberger"         %% "akka-http-json4s"         % "1.20.1",
+  "de.heikoseeberger"         %% "akka-http-json4s"         % "1.20.1" exclude("com.typesafe.akka", "akka-http_2.11") exclude("com.typesafe.akka", "akka-stream_2.11"),
 
   "ch.qos.logback"             % "logback-classic"          % "1.1.7",
   "org.logback-extensions"     % "logback-ext-loggly"       % "0.1.4" exclude("ch.qos.logback", "logback-classic"),
@@ -85,7 +80,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.11.0",
+    version := "0.11.1",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
