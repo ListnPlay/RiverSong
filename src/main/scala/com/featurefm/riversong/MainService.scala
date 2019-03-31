@@ -50,13 +50,16 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
 
   private def wrapper(req: HttpRequest): Any => Option[LogEntry] = {
     val beginning = Platform.currentTime
+    val level: Logging.LogLevel = if (config.getBoolean("akka.http.server.request_log")) Logging.InfoLevel else Logging.DebugLevel
 
     {
-      case Complete(res) if req.method == HttpMethods.GET && ignoredPaths.contains(req.uri.path.toString) &&  res.status.isSuccess() =>
+      case Complete(res) if res.status == StatusCodes.ImATeapot =>
+        None
+      case Complete(res) if req.method == HttpMethods.GET && ignoredPaths.contains(req.uri.path.toString) && res.status.isSuccess() =>
         None
       case Complete(res) =>
         val duration = new Period(Platform.currentTime - beginning)
-        Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${res.status} [${duration.toString(F1)}]", Logging.InfoLevel))
+        Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${res.status} [${duration.toString(F1)}]", level))
       case Rejected(seq) if seq.isEmpty =>
         Some(LogEntry(s"${req.method.value} ${req.uri.path} ~> ${StatusCodes.NotFound}", Logging.InfoLevel))
       case Rejected(_) =>
@@ -67,34 +70,20 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
   private def buildRoutes(r: RiverSongRouting*) = r.map(_.routes).reduce(_ ~ _)
 
   private[this] lazy val routes: Route =
-    if (config.getBoolean("akka.http.server.request_log"))
-      logRequestResult(wrapper _)(measuredRoutes)
-    else
-      measuredRoutes
+    logRequestResult(wrapper _)(measuredRoutes)
 
   private[this] lazy val measuredRoutes: Route = {
 
-    val defaultRejectionHandler = RejectionHandler.default
     import Json4sProtocol._
 
     def prefixEntity(entity: ResponseEntity): ResponseEntity = entity match {
-      case HttpEntity.Strict(contentType, data) =>
+      case HttpEntity.Strict(_, data) =>
         HttpEntity(ContentTypes.`application/json`, serialization.write(Message(data.utf8String)))
       case _ =>
         throw new IllegalStateException("Unexpected entity type")
     }
 
-    val myRejectionHandler =
-      RejectionHandler.newBuilder()
-        .handleAll[Rejection] { rejections =>
-          mapResponseEntity(prefixEntity) {
-            defaultRejectionHandler(rejections) getOrElse complete(StatusCodes.InternalServerError)
-          }
-        }.handleNotFound {
-          mapResponseEntity(prefixEntity) {
-            defaultRejectionHandler(Nil) getOrElse complete(StatusCodes.InternalServerError)
-          }
-        }.result()
+    val myRejectionHandler = RejectionHandler.default.mapRejectionResponse(res => res.copy(entity = prefixEntity(res.entity)))
 
     val rawRoutes: Route = buildRoutes(services:_*)
 
