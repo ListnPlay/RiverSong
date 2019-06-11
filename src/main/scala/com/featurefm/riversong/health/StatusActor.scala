@@ -17,12 +17,12 @@ class StatusActor extends Actor with ActorLogging with InstrumentedActor {
   }
 
   override def receive: Receive = {
-    case SetHealth(x) if x =>
+    case SetHealth(true) =>
       state = OK
-    case SetHealth(x) if state == OK =>
+    case SetHealth(_) if state == OK =>
       log.warning(s"${system.name} service is unhealthy")
       state = DEGRADED
-    case SetHealth(x) =>
+    case SetHealth(_) =>
       log.error(s"${system.name} service is unhealthy")
       state = CRITICAL
     case GetHealth =>
