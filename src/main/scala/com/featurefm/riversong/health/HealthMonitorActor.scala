@@ -3,10 +3,13 @@ package com.featurefm.riversong.health
 import akka.actor.{Actor, ActorLogging}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
-import com.featurefm.riversong.Configurable
+import com.featurefm.riversong.{Configurable, Json4sProtocol}
 import com.featurefm.riversong.health.HealthState._
 import com.featurefm.riversong.metrics.InstrumentedActor
 import com.softwaremill.macwire.Wired
+import de.heikoseeberger.akkahttpjson4s.Json4sSupport
+import org.json4s.JObject
+import org.json4s.jackson.JsonMethods
 
 import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, _}
@@ -49,7 +52,14 @@ class HealthMonitorActor(healthChecks: List[HealthCheck]) extends Actor with Act
         .map { res =>
           val problems = res.filter{ case (_, info) => info.state == CRITICAL }
           if (problems.nonEmpty) {
-            val msg = problems.map{ case (service, info) => s"'$service': '${info.details}'"}.mkString("{ ", ", ", " }")
+            val msg = problems.map{ case (service, info) =>
+              info.extra match {
+                case Some(x: JObject) =>
+                  s"'$service':{'error':'${info.details}','details': ${JsonMethods.compact(x)}}"
+                case Some(x) => s"'$service':{'error':'${info.details}','details':'$x'}"
+                case _ => s"'$service':'${info.details}'"
+              }
+            }.mkString("{", ",", "}")
             log.warning(s"Health-check failed for: $msg")
           }
           if (res.size < healthChecks.size) {

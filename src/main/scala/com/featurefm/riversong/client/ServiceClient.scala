@@ -77,7 +77,7 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
     case code =>
       HealthInfo(isDown, s"http://$host:$port ~> $code")
   } recover { case e =>
-    HealthInfo(isDown, s"http://$host:$port ~> UNREACHABLE", Some(e.getMessage))
+    HealthInfo(isDown, s"http://$host:$port ~> UNREACHABLE", Some(e.toString))
   }
 
   def startSelfHealthWatch(): Unit = {

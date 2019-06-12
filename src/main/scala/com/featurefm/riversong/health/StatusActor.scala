@@ -20,10 +20,10 @@ class StatusActor extends Actor with ActorLogging with InstrumentedActor {
     case SetHealth(true) =>
       state = OK
     case SetHealth(_) if state == OK =>
-      log.warning(s"${system.name} service is unhealthy")
+      log.warning(s"${system.name} service health is DEGRADED")
       state = DEGRADED
     case SetHealth(_) =>
-      log.error(s"${system.name} service is unhealthy")
+      log.error(s"${system.name} service health is CRITICAL")
       state = CRITICAL
     case GetHealth =>
       sender() ! !(state == CRITICAL)
