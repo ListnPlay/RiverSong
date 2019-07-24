@@ -12,6 +12,7 @@ import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.stream.scaladsl.{RestartSource, Sink, Source, SourceQueue}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
+import com.featurefm.riversong.health.{HealthCheck, HealthInfo, HealthState}
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.{Configurable, InitBeforeUse}
 import io.prometheus.client.Counter
@@ -23,12 +24,13 @@ import scala.concurrent.{Future, Promise}
 import scala.util.Try
 import scala.util.hashing.MurmurHash3
 
-class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumented with Configurable with InitBeforeUse {
+class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumented with Configurable with InitBeforeUse with HealthCheck {
 
   protected lazy val log = Logging(system, getClass)
 
   implicit val mat = ActorMaterializer()
 
+  lazy val healthTopic = "health-check"
   val brokers: KeyType = config.getString("kafka.hosts")
   private val queueBuffer: Int = config.getInt("kafka.send.producer-queue-buffer")
   private val sendTimeout = config.getLong("kafka.send.call-timeout-ms").millis
@@ -38,6 +40,7 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
   private val maxRestarts: Int = config.getInt("kafka.send.backoff.max-restarts")
 
   private lazy val producerSettings = ProducerSettings[KeyType, ValueType](system, new StringSerializer, new ByteArraySerializer).withBootstrapServers(brokers)
+  import system.dispatcher
 
   // reference to the queue. updated if queue is restarted
   val ref = new AtomicReference[SourceQueue[ProducerMessage.Message[KeyType, ValueType, Promise[Long]]]]()
@@ -93,6 +96,14 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
       p.future, monitorIfTimeout))
   }
 
+  override def getHealth: Future[HealthInfo] = {
+   send(healthTopic, KafkaService.toBytes(system.name), system.name) map { ret =>
+     if (ret >= 0) {
+       HealthInfo(HealthState.OK, details = s"'$healthTopic' topic on brokers ${brokers}, offset $ret")
+     }
+     HealthInfo(HealthState.CRITICAL, details = s"'$healthTopic' topic on brokers ${brokers}, offset $ret")
+   }
+  }
 }
 
 object KafkaService {
