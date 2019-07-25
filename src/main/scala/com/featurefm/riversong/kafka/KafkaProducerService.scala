@@ -101,7 +101,9 @@ class KafkaProducerService()(implicit val system: ActorSystem) extends Instrumen
      if (ret >= 0) {
        HealthInfo(HealthState.OK, details = s"'$healthTopic' topic on brokers ${brokers}, offset $ret")
      }
-     HealthInfo(HealthState.CRITICAL, details = s"'$healthTopic' topic on brokers ${brokers}, offset $ret")
+     else {
+       HealthInfo(HealthState.CRITICAL, details = s"'$healthTopic' topic on brokers ${brokers}, offset $ret")
+     }
    }
   }
 }
