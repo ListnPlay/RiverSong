@@ -1,36 +1,23 @@
 package com.featurefm.riversong.client
 
-import akka.actor.ActorSystem
-import akka.event.Logging
 import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.model.StatusCodes.BadRequest
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, ResponseEntity, StatusCode}
-import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
 import akka.pattern.CircuitBreaker
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
-import com.featurefm.riversong.health.{HealthCheck, HealthInfo, HealthState}
-import com.featurefm.riversong.{Configurable, Json4sProtocol}
+import com.featurefm.riversong.health.{HealthCheckWithCritical, HealthInfo, HealthState}
 import com.featurefm.riversong.message.Message
+import com.featurefm.riversong.{Configurable, Json4sProtocol}
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by yardena on 11/8/15.
  */
-trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
-
-  val system: ActorSystem
-
-  val serviceName: String
-
-  def isServiceCritical: Boolean
-
-  override lazy val healthCheckName: String = serviceName
-
-  protected val log = Logging(system, getClass)
+trait ServiceClient extends Configurable with Json4sProtocol with HealthCheckWithCritical {
 
   lazy val host = config.getString(s"services.$serviceName.host")
   lazy val port = config.getInt(s"services.$serviceName.port")
@@ -69,8 +56,6 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheck {
     x.discardEntityBytes()
     x.status
   }
-
-  private def isDown = if (isServiceCritical) HealthState.CRITICAL else HealthState.DEGRADED
 
   override def getHealth: Future[HealthInfo] = status map {
     case code if code.isSuccess() => HealthInfo(HealthState.OK, s"http://$host:$port ~> $code")

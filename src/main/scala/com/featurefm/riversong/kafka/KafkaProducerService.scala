@@ -11,8 +11,7 @@ import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.stream.scaladsl.{RestartSource, Sink, Source, SourceQueue}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import com.featurefm.riversong.client.ServiceClient
-import com.featurefm.riversong.health.{HealthInfo, HealthState}
+import com.featurefm.riversong.health.{HealthCheckWithCritical, HealthInfo, HealthState}
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.{Configurable, InitBeforeUse}
 import io.prometheus.client.Counter
@@ -24,14 +23,15 @@ import scala.concurrent.{Future, Promise}
 import scala.util.Try
 import scala.util.hashing.MurmurHash3
 
-class KafkaProducerService(critical: Boolean = true)(implicit val system: ActorSystem) extends Instrumented with Configurable with InitBeforeUse with ServiceClient {
+class KafkaProducerService(implicit val system: ActorSystem) extends Instrumented with Configurable with InitBeforeUse with HealthCheckWithCritical {
 
   override val serviceName = "kafka-producer"
 
+  implicit val executor = system.dispatcher
   implicit val mat = ActorMaterializer()
 
   lazy val healthTopic = "health-check"
-  override def isServiceCritical: Boolean = critical
+  override def isServiceCritical: Boolean = config.getBoolean("kafka.is-critical")
 
   val brokers: KeyType = config.getString("kafka.hosts")
   private val queueBuffer: Int = config.getInt("kafka.send.producer-queue-buffer")
