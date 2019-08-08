@@ -44,9 +44,9 @@ libraryDependencies ++= Seq(
 
   "ch.qos.logback"             % "logback-classic"          % "1.1.7",
   "org.logback-extensions"     % "logback-ext-loggly"       % "0.1.4" exclude("ch.qos.logback", "logback-classic"),
-  "org.slf4j"                  %  "slf4j-api"               % slf4jVersion,
-  "org.slf4j"                  %  "log4j-over-slf4j"        % slf4jVersion,
-  "com.getsentry.raven"        % "raven-logback"            % "7.6.0" exclude("com.fasterxml.jackson.core", "jackson-core"),
+  "org.slf4j"                  % "slf4j-api"                % slf4jVersion,
+  "org.slf4j"                  % "log4j-over-slf4j"         % slf4jVersion,
+  "io.sentry"                  % "sentry-logback"           % "1.7.23" exclude("com.fasterxml.jackson.core", "jackson-core"),
 
   "com.softwaremill.macwire"  %% "macros"                   % macWireVersion % "provided",
   "com.softwaremill.macwire"  %% "util"                     % macWireVersion,
@@ -80,7 +80,7 @@ libraryDependencies ++= Seq(
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.11.8",
+    version := "0.11.9-SNAPSHOT",
     scalaVersion := "2.11.12",
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
