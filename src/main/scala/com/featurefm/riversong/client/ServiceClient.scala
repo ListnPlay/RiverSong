@@ -1,5 +1,7 @@
 package com.featurefm.riversong.client
 
+import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.model.StatusCodes.BadRequest
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, ResponseEntity, StatusCode}
@@ -21,6 +23,9 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheckWit
 
   lazy val host = config.getString(s"services.$serviceName.host")
   lazy val port = config.getInt(s"services.$serviceName.port")
+
+  val system: ActorSystem
+  val log = Logging(system, getClass.getName)
 
   lazy val http = HttpSiteClient(host, port)(system)
 

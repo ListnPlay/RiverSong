@@ -18,7 +18,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
 import org.apache.kafka.common.{PartitionInfo, TopicPartition}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.compat.Platform
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -86,7 +86,7 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
         log.info(s"Partitions per topic: $partitions")
         val partitionToTimeMap = Map(partitions.map({ a => new TopicPartition(a.topic(), a.partition()) -> long2Long(timestamp) }): _*)
 
-        val baseSource = Consumer.plainSource(consumerSettings, Subscriptions.assignmentOffsetsForTimes(partitionToTimeMap))
+        val baseSource = Consumer.plainSource(consumerSettings, Subscriptions.assignmentOffsetsForTimes(partitionToTimeMap.asJava))
 
         val source: Source[ConsumerMessageType, _] =
           if (waitTimeInMs > 0) {
@@ -117,7 +117,7 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
 
     topicsFuture map { x =>
       val jTopicsMap: Optional[util.Map[String, util.List[PartitionInfo]]] = x.getResponse
-      val topicsMap: Map[String, Seq[PartitionInfo]] = if (jTopicsMap.isPresent) jTopicsMap.get().toMap.mapValues(_.toSeq) else Map.empty
+      val topicsMap: Map[String, Seq[PartitionInfo]] = if (jTopicsMap.isPresent) jTopicsMap.get().asScala.toMap.mapValues(_.asScala.toSeq) else Map.empty
 
       topicsSeq.flatMap(topic => topicsMap.getOrElse(topic, Seq.empty))
     }

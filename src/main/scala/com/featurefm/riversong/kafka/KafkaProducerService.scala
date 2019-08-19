@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import akka.Done
 import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.stream.scaladsl.{RestartSource, Sink, Source, SourceQueue}
@@ -32,6 +33,8 @@ class KafkaProducerService(implicit val system: ActorSystem) extends Instrumente
 
   lazy val healthTopic = "health-check"
   override def isServiceCritical: Boolean = config.getBoolean("kafka.is-critical")
+
+  protected val log = Logging(system, getClass)
 
   val brokers: KeyType = config.getString("kafka.hosts")
   private val queueBuffer: Int = config.getInt("kafka.send.producer-queue-buffer")

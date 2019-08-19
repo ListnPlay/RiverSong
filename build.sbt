@@ -15,7 +15,7 @@ val akkaHttpVersion = "10.1.8"
 
 val json4sVersion   = "3.5.3"
 
-val macWireVersion  = "2.3.1"
+val macWireVersion  = "2.3.3"
 
 val jacksonVersion  = "2.8.5"
 
@@ -62,7 +62,7 @@ libraryDependencies ++= Seq(
   
   "io.dropwizard.metrics"      % "metrics-core"             % "3.1.2" exclude("org.slf4j", "slf4j-api"),
   "io.dropwizard.metrics"      % "metrics-jvm"              % "3.1.2" exclude("org.slf4j", "slf4j-api"),
-  "nl.grons"                  %% "metrics-scala"            % "3.5.3" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
+  "nl.grons"                  %% "metrics-scala"            % "3.5.5" exclude("io.dropwizard.metrics", "metrics-core") exclude("org.slf4j", "slf4j-api"),
 
   "org.codehaus.janino"        % "janino"                   % "3.0.1", //who needs it?
 
@@ -77,11 +77,15 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"        %% "akka-http-testkit"         % akkaHttpVersion % Test
 )
 
+lazy val scala212 = "2.12.9"
+lazy val scala211 = "2.11.12"
+lazy val supportedScalaVersions = List(scala211, scala212)
+
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.11.8",
-    scalaVersion := "2.11.12",
+    version := "0.12.0-SNAPSHOT",
+    crossScalaVersions := supportedScalaVersions,
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
     publishMavenStyle := true,

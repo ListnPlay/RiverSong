@@ -23,7 +23,7 @@ trait BaseRouting extends RiverSongRouting with Directives with Json4sProtocol w
   implicit val context = system.dispatcher
   implicit val materializer = ActorMaterializer()
 
-  val log = Logging(system, getClass)
+  val log = Logging(system, getClass.getName)
 
   def status(e: Throwable, code: StatusCode): StatusCode = if (e.isInstanceOf[IllegalArgumentException]) code else StatusCodes.InternalServerError
 

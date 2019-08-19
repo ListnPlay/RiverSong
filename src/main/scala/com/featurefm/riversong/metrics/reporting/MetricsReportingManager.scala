@@ -7,6 +7,7 @@ import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import com.featurefm.riversong.metrics.Metrics
 import com.typesafe.config.{Config, ConfigRenderOptions}
 
+import scala.collection.JavaConverters._
 import scala.collection.convert.WrapAsScala
 import scala.concurrent.duration.FiniteDuration
 
@@ -49,7 +50,7 @@ class MetricsReportingManager extends Actor with ActorLogging {
 
       val definedReporters =
         for {
-          entry <- WrapAsScala.iterableAsScalaIterable(master.root.entrySet)
+          entry <- master.root.entrySet.asScala
           if master.getConfig(entry.getKey).getBoolean("enabled")
         } yield {
           val config = master.getConfig(entry.getKey)
@@ -59,7 +60,7 @@ class MetricsReportingManager extends Actor with ActorLogging {
 
           metrics.system.dynamicAccess.createInstanceFor[ScheduledReporter](clazz,
             List(classOf[ActorSystem] -> context.system, classOf[Config] -> config)).map({
-            case reporter =>
+            reporter =>
               reporter.start(FiniteDuration(config.getDuration("reporting-interval", TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS))
               reporter
           }).recover({

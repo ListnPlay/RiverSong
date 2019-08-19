@@ -4,7 +4,7 @@ import com.codahale.metrics._
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection._
 import scala.collection.convert.Wrappers.JMapWrapper
 import scala.concurrent.duration.Duration
@@ -25,7 +25,7 @@ class MetricsWriter(registry: MetricRegistry) {
   private def getVmMetrics(pattern: Option[String] = None): JObject = {
 
     if (registry != null) {
-      val t = SortedMap(registry.getMetrics.filterKeys(n => n.startsWith("jvm.") && pattern.forall(_.r.pattern.matcher(n).matches())).to: _*)
+      val t = SortedMap(registry.getMetrics.asScala.filterKeys(n => n.startsWith("jvm.") && pattern.forall(_.r.pattern.matcher(n).matches())).to: _*)
 
       if (t.isEmpty) {
         JObject(Nil)
@@ -43,7 +43,7 @@ class MetricsWriter(registry: MetricRegistry) {
             }
         }
 
-        SortedMap(JMapWrapper(m).to: _*).map {
+        SortedMap(JMapWrapper(m.asJava).to: _*).map {
           w =>
             w._1 ->
               w._2.map {
@@ -61,7 +61,7 @@ class MetricsWriter(registry: MetricRegistry) {
   private def getCustomMetrics(pattern: Option[String] = None): JObject = {
 
     if (registry != null) {
-      val t = SortedMap(registry.getMetrics.filterKeys(n => !n.startsWith("jvm.") && pattern.forall(_.r.pattern.matcher(n).matches())).to: _*)
+      val t = SortedMap(registry.getMetrics.asScala.filterKeys(n => !n.startsWith("jvm.") && pattern.forall(_.r.pattern.matcher(n).matches())).to: _*)
 
       if (t.isEmpty) {
         JObject(Nil)
