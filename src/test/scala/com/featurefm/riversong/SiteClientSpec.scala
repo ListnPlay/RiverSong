@@ -41,7 +41,7 @@ class SiteClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTimeout
       whenReady(f) { result =>
         result.status.intValue() shouldBe 200
       }
-      Await.ready(f flatMap (_.discardEntityBytes().future()), 1.second)
+      Await.ready(f flatMap (_.discardEntityBytes().future()), 4.second)
     }
 
     {
@@ -50,7 +50,7 @@ class SiteClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTimeout
       whenReady(f2) { result =>
         result.status.intValue() shouldBe 200
       }
-      Await.ready(f2 flatMap (_.discardEntityBytes().future()), 1.second)
+      Await.ready(f2 flatMap (_.discardEntityBytes().future()), 4.second)
     }
 
   }
@@ -80,7 +80,7 @@ class SiteClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTimeout
 
   override protected def afterAll(): Unit = {
     new Slf4jReporter()(system, config.getConfig("metrics.reporters.Slf4j")).report()
-    Await.ready(client1.shutdown() flatMap { _ => system.terminate() }, 3.seconds)
+    Await.ready(client1.shutdown() flatMap { _ => system.terminate() }, 4.seconds)
   }
 
 }
