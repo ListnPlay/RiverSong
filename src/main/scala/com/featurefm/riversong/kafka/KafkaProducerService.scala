@@ -145,7 +145,7 @@ class KafkaProducerService(implicit val system: ActorSystem) extends Instrumente
     // count events where timeout occurred (dropped out of queue?)
     FutureUtil.futureWithTimeout(p.future, sendTimeout, () => {
       KafkaService.msgMetric.labels(s"$topic-timeout").inc()
-      throw new TimeoutException(s"Sending to kafka got timeout after $sendTimeout ms message with topic:$topic key:$key")
+      new TimeoutException(s"Sending to kafka got timeout after $sendTimeout ms message with topic:$topic key:$key")
     })
   }
 
