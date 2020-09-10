@@ -9,7 +9,7 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("listnplay", "maven")
 )
 
-val akkaVersion     = "2.5.26"
+val akkaVersion     = "2.5.31"
 
 val akkaHttpVersion = "10.1.12"
 
@@ -34,7 +34,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"         %% "akka-slf4j"               % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"         %% "akka-http"                % akkaHttpVersion exclude("com.typesafe", "config"),
   
-  "com.typesafe.akka"         %% "akka-stream-kafka"        % "1.1.0",
+  "com.typesafe.akka"         %% "akka-stream-kafka"        % "2.0.5",
 
   "com.fasterxml.jackson.core" % "jackson-core"             % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations"      % jacksonVersion,
@@ -84,7 +84,7 @@ lazy val supportedScalaVersions = List(scala211, scala212)
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.12.10",
+    version := "0.12.11",
     crossScalaVersions := supportedScalaVersions,
     bintrayOrganization := Some("listnplay"),
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
