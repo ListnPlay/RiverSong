@@ -68,7 +68,7 @@ libraryDependencies ++= Seq(
 
   //------------------------------------ T E S T ----------------------------------------------
 
-  "org.apache.kafka"         %% "kafka"                     % "2.1.1"         % Test,
+  "org.apache.kafka"         %% "kafka"                     % "2.4.1"         % Test,
   "org.scalatest"            %% "scalatest"                 % "3.0.5"         % Test,
   "io.github.embeddedkafka"  %% "embedded-kafka"            % "2.1.1"         % Test,
   "org.mockito"              %% "mockito-scala"             % "1.1.3"         % Test,
