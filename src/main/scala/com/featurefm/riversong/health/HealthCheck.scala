@@ -11,4 +11,6 @@ trait HealthCheck {
    * @return returns a future to the health information
    */
   def getHealth: Future[HealthInfo]
+
+  lazy val isStatusAware = false
 }
