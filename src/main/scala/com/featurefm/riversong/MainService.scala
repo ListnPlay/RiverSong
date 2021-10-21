@@ -108,7 +108,7 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
   def registerHealthChecks(wired: Wired): Unit = {
     val healthChecks = wired.lookup(classOf[HealthCheck])
     healthChecks foreach Health().addCheck
-    system.actorOf(Props(classOf[HealthMonitorActor], healthChecks.map(_.isStatusAware)), "health-monitor")
+    system.actorOf(Props(classOf[HealthMonitorActor], healthChecks.filter(_.isStatusAware)), "health-monitor")
   }
 
 }

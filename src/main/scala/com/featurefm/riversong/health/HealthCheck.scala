@@ -12,5 +12,5 @@ trait HealthCheck {
    */
   def getHealth: Future[HealthInfo]
 
-  lazy val isStatusAware = false
+  lazy val isStatusAware: Boolean = false
 }
