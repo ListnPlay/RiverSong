@@ -9,6 +9,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
+import com.featurefm.riversong.tracing.ContextPropagation
 import nl.grons.metrics.scala.MetricName
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,8 +32,8 @@ trait HttpClientInterface extends Json4sProtocol with Instrumented with MetricIm
   def send(request: HttpRequest, requestName: String): Future[HttpResponse] = send(request)(FixedNaming(requestName))
 
   import akka.pattern.after
-  def send(request: HttpRequest, timeout: Timeout, requestName: Option[String] = None): Future[HttpResponse] = Future.firstCompletedOf(List(
-    send(request, requestName.getOrElse(MethodAndPathNamedRequest(request))),
+  def send(request: HttpRequest, timeout: Timeout, requestName: Option[String] = None)(implicit cp: ContextPropagation): Future[HttpResponse] = Future.firstCompletedOf(List(
+    send(request.withHeaders(request.headers ++ cp.headers), requestName.getOrElse(MethodAndPathNamedRequest(request))),
     after(timeout.duration, using = system.scheduler)(Future failed new TimeoutException(s"Request ${requestName.getOrElse(MethodAndPathNamedRequest(request))} to service $name has timed out after ${timeout.duration.toString()}"))
   ))
 

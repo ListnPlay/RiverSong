@@ -11,6 +11,7 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import com.featurefm.riversong.health.{HealthCheckWithCritical, HealthInfo, HealthState}
 import com.featurefm.riversong.message.Message
+import com.featurefm.riversong.tracing.ContextPropagation
 import com.featurefm.riversong.{Configurable, Json4sProtocol}
 
 import scala.concurrent.duration._
@@ -37,7 +38,7 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheckWit
     case _ => new RuntimeException(msg)
   }
 
-  def send(request: HttpRequest, timeout: FiniteDuration, requestName: Option[String] = None): Future[HttpResponse] =
+  def send(request: HttpRequest, timeout: FiniteDuration, requestName: Option[String] = None)(implicit cp: ContextPropagation): Future[HttpResponse] =
     http.send(request, Timeout(timeout), requestName)
 
   def readAs[T](response: ResponseEntity)
@@ -57,7 +58,7 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheckWit
 
   val healthCallTimeout = config.getInt("services.call-timeout-ms").milliseconds  //2.seconds
 
-  def status: Future[StatusCode] = http.send(Get("/status"), Timeout(healthCallTimeout)) map { x =>
+  def status(implicit cp: ContextPropagation = ContextPropagation()): Future[StatusCode] = http.send(Get("/status"), Timeout(healthCallTimeout)) map { x =>
     x.discardEntityBytes()
     x.status
   }

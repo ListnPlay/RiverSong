@@ -10,6 +10,7 @@ import akka.stream.ActorMaterializer
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.metrics.MetricsDefinition.{httpRequestDuration, _}
+import com.featurefm.riversong.tracing.ContextPropagation
 import io.prometheus.client.SimpleTimer
 
 import scala.concurrent.Future
@@ -45,7 +46,12 @@ trait BaseRouting extends RiverSongRouting with Directives with Json4sProtocol w
       }
     }
   }
-  
+
+  def tracing(): Directive1[ContextPropagation] = extractRequestContext.flatMap[Tuple1[ContextPropagation]] { ctx =>
+    import ContextPropagation._
+    provide(ContextPropagation(ctx.request.headers.filter(x => dtHeadersSet.contains(x.lowercaseName))))
+  }
+
   def measurementNameDefault(req: HttpRequest) = s"${req.uri.path}"
 
   def onCompleteMeasured[T](name: String)(future: => Future[T]): Directive1[Try[T]] = onCompleteMeasured(_ => name)(future)
