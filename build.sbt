@@ -87,5 +87,4 @@ lazy val root = (sbt.project in file(".")).settings(
     crossScalaVersions := supportedScalaVersions,
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
     publishConfiguration := publishConfiguration.value.withOverwrite(true),
-    credentials += Credentials("Artifactory Realm", "featurefm.jfrog.io", "dev@feature.fm", "AP5ATyTDX5p6WNGqLfdPoCN8uhL"),
     publishTo := Some("Artifactory Realm" at "https://featurefm.jfrog.io/artifactory/feature-sbt-release-local"))
