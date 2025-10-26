@@ -90,7 +90,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"        %% "akka-http-testkit"         % akkaHttpVersion % Test
 )
 
-lazy val scala212 = "2.12.9"
+lazy val scala212 = "2.12.18"
 lazy val supportedScalaVersions = List(scala212)
 
 lazy val root = (sbt.project in file(".")).settings(
