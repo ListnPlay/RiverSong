@@ -91,8 +91,7 @@ libraryDependencies ++= Seq(
 )
 
 lazy val scala212 = "2.12.9"
-lazy val scala211 = "2.11.12"
-lazy val supportedScalaVersions = List(scala211, scala212)
+lazy val supportedScalaVersions = List(scala212)
 
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
