@@ -2,10 +2,10 @@ package com.featurefm.riversong.kafka
 
 import akka.Done
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
-import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import io.github.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.mockito.Mockito
 import org.mockito.Mockito._
@@ -26,7 +26,7 @@ class KafkaSpec extends TestKit(ActorSystem("KafkaSpec")) with FlatSpecLike with
 
   override implicit def patienceConfig: PatienceConfig = PatienceConfig(scaled(Span(2, Seconds)), scaled(Span(50, Millis)))
 
-  implicit val mat: ActorMaterializer = ActorMaterializer()
+  implicit val mat: Materializer = Materializer.matFromSystem(system)
 
   override def beforeAll(): Unit = {
     super.beforeAll()

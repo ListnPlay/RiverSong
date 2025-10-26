@@ -12,7 +12,7 @@ import akka.event.Logging
 import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.stream.scaladsl.{RestartSource, Sink, Source, SourceQueue}
-import akka.stream.{ActorMaterializer, OverflowStrategy}
+import akka.stream.{Materializer, OverflowStrategy}
 import com.featurefm.riversong.health.{HealthCheckWithCritical, HealthInfo, HealthState}
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.{Configurable, InitBeforeUse}
@@ -83,7 +83,7 @@ class KafkaProducerService(implicit val system: ActorSystem) extends Instrumente
   override val serviceName = "kafka-producer"
 
   implicit val executor = system.dispatcher
-  implicit val mat = ActorMaterializer()
+  implicit val mat: Materializer = Materializer.matFromSystem
 
   lazy val healthTopic = "health-check"
   override def isServiceCritical: Boolean = config.getBoolean("kafka.is-critical")

@@ -4,23 +4,24 @@ import java.io.{ByteArrayInputStream, InputStreamReader}
 import java.util
 import java.util.{Optional, UUID}
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.kafka.scaladsl.Consumer
-import akka.kafka.{ConsumerSettings, KafkaConsumerActor, Metadata, Subscriptions}
-import akka.stream.ActorMaterializer
+import akka.kafka.{ConsumerSettings, Subscriptions}
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import akka.util.Timeout
 import com.featurefm.riversong.Configurable
 import com.featurefm.riversong.health.{HealthCheck, HealthInfo, HealthState}
 import com.featurefm.riversong.metrics.Instrumented
+import org.apache.kafka.clients.admin.{AdminClient, AdminClientConfig}
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
 import org.apache.kafka.common.{PartitionInfo, TopicPartition}
 
+import java.util.Properties
 import scala.collection.JavaConverters._
 import scala.compat.Platform
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -29,7 +30,7 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
 
   protected lazy val log = Logging(system, getClass)
 
-  implicit val mat = ActorMaterializer()
+  implicit val mat: Materializer = Materializer.matFromSystem
 
   val brokers: KeyType = config.getString("kafka.hosts")
 
@@ -37,17 +38,39 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
   val defaultClientId = config.getString("kafka.receive.client-id")
   val defaultAutoOffsetReset = config.getString("kafka.receive.auto-offset")
 
-  private val partitionConsumerSettings = createConsumerSettings(defaultGroupId + "-partition", defaultClientId + "-partition", true)
   private val timeout = 5.seconds
-  private val settings = partitionConsumerSettings.withMetadataRequestTimeout(timeout)
-  implicit val askTimeout = Timeout(timeout)
 
-  private val consumer: ActorRef = system.actorOf(KafkaConsumerActor.props(settings))
-
-  import akka.pattern.ask
   import system.dispatcher
 
-  def topicsFuture: Future[Metadata.Topics] = (consumer ? Metadata.ListTopics).mapTo[Metadata.Topics]
+  private def toScalaFuture[T](completionStage: java.util.concurrent.CompletionStage[T]): Future[T] = {
+    val promise = Promise[T]()
+    completionStage.whenComplete { (result, exception) =>
+      if (exception != null) {
+        promise.failure(exception)
+      } else {
+        promise.success(result)
+      }
+    }
+    promise.future
+  }
+
+  // AdminClient for metadata operations (replaces KafkaConsumerActor)
+  private lazy val adminClient: AdminClient = {
+    val props = new Properties()
+    props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, brokers)
+    props.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, timeout.toMillis.toString)
+    AdminClient.create(props)
+  }
+
+  // Clean up AdminClient on system termination
+  system.registerOnTermination {
+    adminClient.close()
+  }
+
+  def topicsFuture: Future[Set[String]] = {
+    toScalaFuture(adminClient.listTopics().names().toCompletionStage)
+      .map(_.asScala.toSet)
+  }
 
 
   /**
@@ -114,13 +137,20 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
     * @return - sequence of topic-partition pairs
     */
   def getPartitionsPerTopic(topicsSeq: Seq[String]): Future[Seq[PartitionInfo]] = {
-
-    topicsFuture map { x =>
-      val jTopicsMap: Optional[util.Map[String, util.List[PartitionInfo]]] = x.getResponse
-      val topicsMap: Map[String, Seq[PartitionInfo]] = if (jTopicsMap.isPresent) jTopicsMap.get().asScala.toMap.mapValues(_.asScala.toSeq) else Map.empty
-
-      topicsSeq.flatMap(topic => topicsMap.getOrElse(topic, Seq.empty))
-    }
+    toScalaFuture(adminClient.describeTopics(topicsSeq.asJava).allTopicNames().toCompletionStage)
+      .map { descriptions =>
+        descriptions.asScala.values.flatMap { desc =>
+          desc.partitions().asScala.map { partition =>
+            new PartitionInfo(
+              desc.name(),
+              partition.partition(),
+              partition.leader(),
+              partition.replicas().toArray(new Array[org.apache.kafka.common.Node](0)),
+              partition.isr().toArray(new Array[org.apache.kafka.common.Node](0))
+            )
+          }
+        }.toSeq
+      }
   }
 
   /**
@@ -152,11 +182,11 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
     * @return returns a future to the health information
     */
   override def getHealth: Future[HealthInfo] = {
-    topicsFuture map { n =>
-      if (!n.getResponse.isPresent || n.getResponse.get().isEmpty)
+    topicsFuture map { topics =>
+      if (topics.isEmpty)
         HealthInfo(HealthState.CRITICAL, details = s"no topics")
       else
-        HealthInfo(HealthState.OK, details = s"topicss=${n.getResponse.get().keySet()}")
+        HealthInfo(HealthState.OK, details = s"topics=$topics")
     } recover { case e =>
       HealthInfo(HealthState.CRITICAL, details = e.toString)
     }

@@ -8,9 +8,9 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("readytalk", "maven"),
 )
 
-val akkaVersion     = "2.5.31"
+val akkaVersion     = "2.6.20"
 
-val akkaHttpVersion = "10.1.12"
+val akkaHttpVersion = "10.2.10"
 
 val json4sVersion   = "3.5.3"
 
@@ -25,7 +25,17 @@ val prometheusVersion = "0.5.0"
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation")
 parallelExecution in Test := false
 fork in Test := true
-javaOptions in Test ++= Seq("-Dlogback.configurationFile=test-logback.xml")
+javaOptions in Test ++= Seq(
+  "-Dlogback.configurationFile=test-logback.xml"
+)
+
+// Force consistent Akka versions across all dependencies
+dependencyOverrides ++= Seq(
+  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+  "com.typesafe.akka" %% "akka-protobuf-v3" % akkaVersion,
+  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+)
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka"         %% "akka-actor"               % akkaVersion exclude("org.scala-lang", "scala-library"),
@@ -33,7 +43,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"         %% "akka-slf4j"               % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"         %% "akka-http"                % akkaHttpVersion exclude("com.typesafe", "config"),
   
-  "com.typesafe.akka"         %% "akka-stream-kafka"        % "2.0.5",
+  "com.typesafe.akka"         %% "akka-stream-kafka"        % "4.0.2",
 
   "com.fasterxml.jackson.core" % "jackson-core"             % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations"      % jacksonVersion,
@@ -67,9 +77,13 @@ libraryDependencies ++= Seq(
 
   //------------------------------------ T E S T ----------------------------------------------
 
-  "org.apache.kafka"         %% "kafka"                     % "2.4.1"         % Test,
+  "org.apache.kafka"         %% "kafka"                     % "3.5.1"         % Test exclude("com.typesafe.akka", "akka-actor") exclude("com.typesafe.akka", "akka-stream"),
   "org.scalatest"            %% "scalatest"                 % "3.0.5"         % Test,
-  "io.github.embeddedkafka"  %% "embedded-kafka"            % "2.1.1"         % Test,
+  ("io.github.embeddedkafka"  %% "embedded-kafka"            % "3.5.1"         % Test)
+    .exclude("com.typesafe.akka", "akka-actor")
+    .exclude("com.typesafe.akka", "akka-stream")
+    .exclude("com.typesafe.akka", "akka-protobuf-v3")
+    .exclude("com.typesafe.akka", "akka-slf4j"),
   "org.mockito"              %% "mockito-scala"             % "1.1.3"         % Test,
   "com.typesafe.akka"        %% "akka-testkit"              % akkaVersion     % Test,
   "com.typesafe.akka"        %% "akka-stream-testkit"       % akkaVersion     % Test,
@@ -83,7 +97,7 @@ lazy val supportedScalaVersions = List(scala211, scala212)
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.12.29",
+    version := "0.13.0",
     crossScalaVersions := supportedScalaVersions,
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
     credentials += Credentials("Artifactory Realm", "featurefm.jfrog.io", "dev@feature.fm", "Aharoni1!"),
