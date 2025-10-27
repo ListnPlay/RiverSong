@@ -9,7 +9,7 @@ Common base for microservices:
 ## How to use
 
 ### sbt
-To include it in your project add `"com.featurefm" %% "river-song" % "0.13.0"` and `"com.softwaremill.macwire" %% "macros" % "2.3.3" % "provided"`
+To include it in your project add `"com.featurefm" %% "river-song" % "0.13.1"` and `"com.softwaremill.macwire" %% "macros" % "2.3.3" % "provided"`
 
 **Requirements:**
 - Scala 2.12.18
