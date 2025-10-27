@@ -43,7 +43,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"         %% "akka-slf4j"               % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"         %% "akka-http"                % akkaHttpVersion exclude("com.typesafe", "config"),
   
-  "com.typesafe.akka"         %% "akka-stream-kafka"        % "2.1.1",
+  "com.typesafe.akka"         %% "akka-stream-kafka"        % "2.1.1", // https://doc.akka.io/libraries/alpakka-kafka/current/home.html
 
   "com.fasterxml.jackson.core" % "jackson-core"             % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations"      % jacksonVersion,
