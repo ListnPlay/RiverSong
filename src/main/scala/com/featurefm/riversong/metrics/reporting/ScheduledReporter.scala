@@ -42,7 +42,7 @@ abstract class ScheduledReporter {
    */
   def start(interval: FiniteDuration): Unit = {
     import system.dispatcher
-    schedule = Some(system.scheduler.schedule(interval, interval)(report()))
+    schedule = Some(system.scheduler.scheduleWithFixedDelay(interval, interval)(() => report()))
 
   }
 

@@ -21,7 +21,7 @@ import scala.util.Try
 trait HttpClientInterface extends Json4sProtocol with Instrumented with MetricImplicits {
 
   implicit val system: ActorSystem
-  implicit val materializer = ActorMaterializer()
+  implicit val materializer: Materializer = Materializer.matFromSystem
   implicit val executor = system.dispatcher
 
   def name: String
@@ -41,7 +41,7 @@ trait HttpClientInterface extends Json4sProtocol with Instrumented with MetricIm
     case _ => Try(response.discardEntityBytes())
   }
 
-  def readAs[T](response: ResponseEntity)(implicit um: Unmarshaller[ResponseEntity, T], ec: ExecutionContext = null, mat: Materializer): Future[T] = Unmarshal(response).to[T] andThen {
+  def readAs[T](response: ResponseEntity)(implicit um: Unmarshaller[ResponseEntity, T], ec: ExecutionContext = null): Future[T] = Unmarshal(response).to[T] andThen {
     case _ => Try(response.discardBytes())
   }
 //  def safeParse[T](response: ResponseEntity)(f: ResponseEntity => Future[T]): Future[T] = f(response) andThen {

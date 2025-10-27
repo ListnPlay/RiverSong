@@ -12,7 +12,7 @@ import akka.event.Logging
 import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.stream.scaladsl.{RestartSource, Sink, Source, SourceQueue}
-import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.{Materializer, OverflowStrategy, RestartSettings}
 import com.featurefm.riversong.health.{HealthCheckWithCritical, HealthInfo, HealthState}
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.{Configurable, InitBeforeUse}
@@ -105,7 +105,8 @@ class KafkaProducerService(implicit val system: ActorSystem) extends Instrumente
 
   override def initialize(): Future[Done] = {
     log.info(s"Initializing producer to kafka server: $brokers with backoff params: minBackoff=$minBackoff, maxBackoff=$maxBackoff, randomFactor=$randomFactor, maxRestarts=$maxRestarts")
-    RestartSource.onFailuresWithBackoff(minBackoff, maxBackoff, randomFactor, maxRestarts)(() =>
+    val restartSettings = RestartSettings(minBackoff, maxBackoff, randomFactor.toDouble).withMaxRestarts(maxRestarts, minBackoff)
+    RestartSource.onFailuresWithBackoff(restartSettings)(() =>
       Source
         .queue[ProducerMsgType](queueBuffer, OverflowStrategy.dropHead)
         .mapMaterializedValue(queue => {

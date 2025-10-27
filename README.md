@@ -9,8 +9,12 @@ Common base for microservices:
 ## How to use
 
 ### sbt
-To include it in your project add `"com.featurefm" %% "river-song" % "0.3.11"` and `"com.softwaremill.macwire" %% "macros" % "2.2.2" % "provided"`
-Only Scala 2.11 is currently supported.
+To include it in your project add `"com.featurefm" %% "river-song" % "0.13.0"` and `"com.softwaremill.macwire" %% "macros" % "2.3.3" % "provided"`
+
+**Requirements:**
+- Scala 2.12.18
+- Java 11+
+- Kafka 3.5.1 with KRaft (no Zookeeper required)
 
 ### code
     trait AllMyServices extends ServiceAssembly {

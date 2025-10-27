@@ -43,7 +43,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"         %% "akka-slf4j"               % akkaVersion exclude("org.slf4j", "slf4j-api") exclude("org.scala-lang", "scala-library"),
   "com.typesafe.akka"         %% "akka-http"                % akkaHttpVersion exclude("com.typesafe", "config"),
   
-  "com.typesafe.akka"         %% "akka-stream-kafka"        % "4.0.2",
+  "com.typesafe.akka"         %% "akka-stream-kafka"        % "2.1.1",
 
   "com.fasterxml.jackson.core" % "jackson-core"             % jacksonVersion,
   "com.fasterxml.jackson.core" % "jackson-annotations"      % jacksonVersion,
@@ -96,7 +96,7 @@ lazy val supportedScalaVersions = List(scala212)
 lazy val root = (sbt.project in file(".")).settings(
     name := "river-song",
     organization := "com.featurefm",
-    version := "0.13.0",
+    version := "0.13.1",
     crossScalaVersions := supportedScalaVersions,
     licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
     credentials += Credentials("Artifactory Realm", "featurefm.jfrog.io", "dev@feature.fm", "Aharoni1!"),

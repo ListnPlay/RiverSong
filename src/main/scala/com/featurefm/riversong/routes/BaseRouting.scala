@@ -6,7 +6,7 @@ import akka.event.Logging
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RouteResult.Complete
 import akka.http.scaladsl.server._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.featurefm.riversong.Json4sProtocol
 import com.featurefm.riversong.metrics.Instrumented
 import com.featurefm.riversong.metrics.MetricsDefinition.{httpRequestDuration, _}
@@ -22,7 +22,7 @@ import scala.util.{Failure, Success, Try}
 trait BaseRouting extends RiverSongRouting with Directives with Json4sProtocol with Instrumented {
 
   implicit val context = system.dispatcher
-  implicit val materializer = ActorMaterializer()
+  implicit val materializer: Materializer = Materializer.matFromSystem
 
   val log = Logging(system, getClass.getName)
 

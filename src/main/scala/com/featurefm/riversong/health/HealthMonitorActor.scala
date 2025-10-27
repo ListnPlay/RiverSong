@@ -1,7 +1,7 @@
 package com.featurefm.riversong.health
 
 import akka.actor.{Actor, ActorLogging}
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import com.featurefm.riversong.{Configurable, Json4sProtocol}
 import com.featurefm.riversong.health.HealthState._
@@ -27,9 +27,9 @@ class HealthMonitorActor(healthChecks: List[HealthCheck]) extends Actor with Act
 
   import context.dispatcher
 
-  implicit val mat = ActorMaterializer()
+  implicit val mat: Materializer = Materializer.matFromSystem(context.system)
 
-  system.scheduler.schedule(Duration.Zero, checkHealthInterval.seconds, self, CheckHealth)
+  system.scheduler.scheduleWithFixedDelay(Duration.Zero, checkHealthInterval.seconds, self, CheckHealth)
 
   override def receive: Receive = {
     case CheckHealth =>
@@ -39,7 +39,7 @@ class HealthMonitorActor(healthChecks: List[HealthCheck]) extends Actor with Act
         .fromIterator(() => healthChecks.iterator)
         .flatMapMerge(4, { s =>
           Source
-            .fromFuture(s.getHealth)
+            .future(s.getHealth)
             .completionTimeout(timeOutOne.seconds)
             .recover {
               case _: scala.concurrent.TimeoutException => HealthInfo(HealthState.CRITICAL, s"Timed out after $timeOutOne seconds")

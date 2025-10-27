@@ -79,7 +79,12 @@ class HttpSiteClient private (secure: Boolean = false)
     Flow.fromFunction((r: InContext[HttpRequest]) => r.with_("name", name)).via(timedFlow)
 
   private val channel = Source
-    .actorRef[InContext[HttpRequest]](10000, OverflowStrategy.dropNew) //todo make buffer size configurable
+    .actorRef[InContext[HttpRequest]](
+      completionMatcher = PartialFunction.empty,
+      failureMatcher = PartialFunction.empty,
+      bufferSize = 10000, //todo make buffer size configurable
+      overflowStrategy = OverflowStrategy.dropHead
+    )
     .via(timedFlow)
     .map { x =>
       x.get[Promise[HttpResponse]]("promise").complete(x.unwrap)

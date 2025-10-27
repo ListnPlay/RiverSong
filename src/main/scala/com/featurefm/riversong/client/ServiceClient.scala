@@ -42,7 +42,7 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheckWit
     http.send(request, Timeout(timeout), requestName)
 
   def readAs[T](response: ResponseEntity)
-               (implicit um: Unmarshaller[ResponseEntity, T], ec: ExecutionContext = null, mat: Materializer): Future[T] =
+               (implicit um: Unmarshaller[ResponseEntity, T], ec: ExecutionContext = null): Future[T] =
     http.readAs[T](response)
 
   def failWith(response: HttpResponse): Future[Nothing] = {
@@ -85,8 +85,8 @@ trait ServiceClient extends Configurable with Json4sProtocol with HealthCheckWit
 
     val interval = config.getInt("services.health-check-interval-seconds").seconds //30.seconds
 
-    system.scheduler.schedule(interval, interval) {
-      breaker.withCircuitBreaker(getHealth.filter(_.state != HealthState.CRITICAL))
+    system.scheduler.scheduleWithFixedDelay(interval, interval) {
+      () => breaker.withCircuitBreaker(getHealth.filter(_.state != HealthState.CRITICAL))
     }
   }
 

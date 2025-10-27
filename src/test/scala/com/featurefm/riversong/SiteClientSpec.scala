@@ -2,7 +2,7 @@ package com.featurefm.riversong
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding._
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
 import com.featurefm.riversong.client.{HttpClient, HttpSiteClient, MetricImplicits}
 import com.featurefm.riversong.metrics.reporting.Slf4jReporter
@@ -31,7 +31,7 @@ class SiteClientSpec extends TestKit(ActorSystem("TestKit")) with DefaultTimeout
   val url1 = "/search?q=scala"
 //  val url2 = "/status"
 
-  implicit val mat = ActorMaterializer()
+  implicit val mat: Materializer = Materializer.matFromSystem(system)
   implicit val ec = system.dispatcher
 
   "SiteClient" should "be able to connect to google.com" in {

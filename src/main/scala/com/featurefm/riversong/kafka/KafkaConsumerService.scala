@@ -42,15 +42,18 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
 
   import system.dispatcher
 
-  private def toScalaFuture[T](completionStage: java.util.concurrent.CompletionStage[T]): Future[T] = {
+  // Helper method to convert Kafka's KafkaFuture to Scala Future
+  private def kafkaFutureToScala[T](kafkaFuture: org.apache.kafka.common.KafkaFuture[T]): Future[T] = {
     val promise = Promise[T]()
-    completionStage.whenComplete { (result, exception) =>
-      if (exception != null) {
-        promise.failure(exception)
-      } else {
-        promise.success(result)
+    kafkaFuture.whenComplete(new org.apache.kafka.common.KafkaFuture.BiConsumer[T, Throwable] {
+      override def accept(result: T, exception: Throwable): Unit = {
+        if (exception != null) {
+          promise.failure(exception)
+        } else {
+          promise.success(result)
+        }
       }
-    }
+    })
     promise.future
   }
 
@@ -68,7 +71,7 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
   }
 
   def topicsFuture: Future[Set[String]] = {
-    toScalaFuture(adminClient.listTopics().names().toCompletionStage)
+    kafkaFutureToScala(adminClient.listTopics().names())
       .map(_.asScala.toSet)
   }
 
@@ -103,7 +106,7 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
                   timestamp: Long = Platform.currentTime,
                   waitTimeInMs: Long = -1): Source[ConsumerMessageType, _] = {
 
-    Source.fromFuture(getPartitionsPerTopic(topics))
+    Source.future(getPartitionsPerTopic(topics))
       .flatMapMerge(1, { partitions =>
         log.info(s"Start listening to topics: $topics")
         log.info(s"Partitions per topic: $partitions")
@@ -137,7 +140,7 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
     * @return - sequence of topic-partition pairs
     */
   def getPartitionsPerTopic(topicsSeq: Seq[String]): Future[Seq[PartitionInfo]] = {
-    toScalaFuture(adminClient.describeTopics(topicsSeq.asJava).allTopicNames().toCompletionStage)
+    kafkaFutureToScala(adminClient.describeTopics(topicsSeq.asJava).all())
       .map { descriptions =>
         descriptions.asScala.values.flatMap { desc =>
           desc.partitions().asScala.map { partition =>

@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
 import akka.http.scaladsl.server.directives._
 import akka.http.scaladsl.server.{Rejection, RejectionHandler, RequestContext, Route}
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.featurefm.riversong.health.{Health, HealthCheck, HealthMonitorActor}
 import com.featurefm.riversong.message.Message
 import com.featurefm.riversong.metrics.reporting.MetricsReportingManager
@@ -28,7 +28,7 @@ import scala.util.{Failure, Success}
 abstract class MainService(val name: String = "Spoilers") extends App with Configurable with Instrumented { self: App =>
   implicit val system = ActorSystem(name)
   implicit val executor = system.dispatcher
-  implicit val materializer = ActorMaterializer()
+  implicit val materializer: Materializer = Materializer.matFromSystem
 
   val log = Logging(system, getClass)
 
@@ -83,14 +83,14 @@ abstract class MainService(val name: String = "Spoilers") extends App with Confi
         throw new IllegalStateException("Unexpected entity type")
     }
 
-    val myRejectionHandler = RejectionHandler.default.mapRejectionResponse(res => res.copy(entity = prefixEntity(res.entity)))
+    val myRejectionHandler = RejectionHandler.default.mapRejectionResponse(res => res.withEntity(prefixEntity(res.entity)))
 
     val rawRoutes: Route = buildRoutes(services:_*)
 
     { ctx: RequestContext => requestCounter.inc(); ctx } andThen handleRejections(myRejectionHandler) { rawRoutes }
   }
 
-  Http().bindAndHandle(routes, host, port) onComplete {
+  Http().newServerAt(host, port).bind(routes) onComplete {
     case Success(bind: Http.ServerBinding) =>
       log.info(s"Server ${bind.localAddress} started")
       val startTime = Platform.currentTime
