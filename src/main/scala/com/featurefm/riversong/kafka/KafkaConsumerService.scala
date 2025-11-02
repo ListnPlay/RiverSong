@@ -140,7 +140,7 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
     * @return - sequence of topic-partition pairs
     */
   def getPartitionsPerTopic(topicsSeq: Seq[String]): Future[Seq[PartitionInfo]] = {
-    kafkaFutureToScala(adminClient.describeTopics(topicsSeq.asJava).all())
+    kafkaFutureToScala(adminClient.describeTopics(topicsSeq.asJava).allTopicNames())
       .map { descriptions =>
         descriptions.asScala.values.flatMap { desc =>
           desc.partitions().asScala.map { partition =>
