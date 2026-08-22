@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, InputStreamReader}
 import java.util
 import java.util.{Optional, UUID}
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.Logging
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.{ConsumerSettings, Subscriptions}
@@ -83,10 +83,25 @@ class KafkaConsumerService()(implicit val system: ActorSystem) extends Instrumen
     * @param consumerSettings - consumer's settings
     * @return - commitable source
     */
-  def committableSource(topics: Seq[String], consumerSettings: ConsumerSettings[KeyType, ValueType]): Source[ConsumerComittableMessageType, _] = {
+  def committableSource(topics: Seq[String], consumerSettings: ConsumerSettings[KeyType, ValueType]): Source[ConsumerComittableMessageType, _] =
+    committableSource(topics, consumerSettings, None)
+
+  /**
+    * Getting a committable source, optionally attaching a rebalance listener actor so the caller
+    * can observe this consumer's live partition assignment (see [[KafkaConsumerStallCheck]]).
+    *
+    * @param topics            - topics to listen and poll messages
+    * @param consumerSettings  - consumer's settings
+    * @param rebalanceListener - actor to receive akka.kafka.TopicPartitionsAssigned/Revoked, or None
+    * @return - committable source
+    */
+  def committableSource(topics: Seq[String], consumerSettings: ConsumerSettings[KeyType, ValueType],
+                        rebalanceListener: Option[ActorRef]): Source[ConsumerComittableMessageType, _] = {
 
     log.info(s"Start listening to topics ${topics.toSet}")
-    Consumer.committableSource(consumerSettings, Subscriptions.topics(topics.toSet))
+    val base = Subscriptions.topics(topics.toSet)
+    val subscription = rebalanceListener.fold(base)(base.withRebalanceListener)
+    Consumer.committableSource(consumerSettings, subscription)
   }
 
   /**
